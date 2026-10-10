@@ -59,9 +59,9 @@ void Transformation::changeScale(float value)
 {
     scale += value;
 
-    if (scale < 0.1f)
+    if (scale < 0.001f)
     {
-        scale = 0.1f;
+        scale = 0.001f;
     }
 }
 

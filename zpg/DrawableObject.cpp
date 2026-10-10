@@ -18,6 +18,12 @@ void DrawableObject::draw()
     glm::mat4 modelMatrix =
         transformation.getModelMatrix();
 
+    for (const Transformation& t : transformations)
+    {
+        modelMatrix =
+            modelMatrix * t.getModelMatrix();
+    }
+
     shaderProgram->setUniform(
         "modelMatrix",
         modelMatrix
@@ -26,16 +32,26 @@ void DrawableObject::draw()
     model->draw();
 }
 
+void DrawableObject::setTransformation(
+    const Transformation& value)
+{
+    transformation = value;
+
+    transformations.clear();
+}
+
+void DrawableObject::addTransformation(
+    const Transformation& value)
+{
+    transformations.push_back(value);
+}
+
 void DrawableObject::translate(
     float x,
     float y,
     float z)
 {
-    transformation.translate(
-        x,
-        y,
-        z
-    );
+    transformation.translate(x, y, z);
 }
 
 void DrawableObject::changeScale(float value)

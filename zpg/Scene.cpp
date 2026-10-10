@@ -300,7 +300,25 @@ void Scene::createModels()
                 )
             )
         );
+        objects.back()->setTransformation(
+            Transformation(
+                -0.88f,
+                -0.65f,
+                0.0f,
+                0.055f,
+                -0.2f
+            )
+        );
 
+        objects.back()->addTransformation(
+            Transformation(
+                0.0f,
+                0.0f,
+                0.0f,
+                1.5f,
+                0.8f
+            )
+        );
         objects.push_back(
             std::make_unique<DrawableObject>(
                 treeModel,
@@ -717,7 +735,7 @@ void Scene::update(GLFWwindow* window)
 
     const float moveSpeed = 0.000825f;
     const float rotationSpeed = 0.0025f;
-    const float scaleSpeed = 0.000825f;
+    const float scaleSpeed = 0.00005f;
 
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {

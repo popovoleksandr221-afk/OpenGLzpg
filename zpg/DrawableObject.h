@@ -5,12 +5,17 @@
 #include "ShaderProgram.h"
 #include "Transformation.h"
 
+#include <vector>
+
 class DrawableObject
 {
 private:
     Model* model;
     ShaderProgram* shaderProgram;
+
     Transformation transformation;
+
+    std::vector<Transformation> transformations;
 
 public:
     DrawableObject(
@@ -20,6 +25,14 @@ public:
     );
 
     void draw();
+
+    void setTransformation(
+        const Transformation& value
+    );
+
+    void addTransformation(
+        const Transformation& value
+    );
 
     void translate(
         float x,
