@@ -124,6 +124,7 @@ void Scene::createShaders()
 
 void Scene::createModels()
 {
+
     if (sceneNumber == 1)
     {
         const float trianglePoints[] =
@@ -146,8 +147,7 @@ void Scene::createModels()
             )
         );
 
-        model =
-            models.back().get();
+        model = models.back().get();
 
         objects.push_back(
             std::make_unique<DrawableObject>(
@@ -155,14 +155,53 @@ void Scene::createModels()
                 shaderProgram,
                 Transformation(
                     0.0f,
-                    0.05f,
                     0.0f,
-                    0.7f,
+                    0.0f,
+                    1.0f,
                     0.0f
                 )
             )
         );
 
+        /*T × R*/
+        objects.back()->addTransformation(
+            Transformation(
+                0.55f,
+                0.1f,
+                0.0f,
+                1.0f,
+                0.0f
+            )
+        );
+
+    
+        objects.back()->addTransformation(
+            Transformation(
+                0.0f,
+                0.0f,
+                0.0f,
+                1.0f,
+                1.0f
+            )
+        );
+
+        /*R × T*/
+
+        //objects.back()->addTransformation(
+        //    Transformation(
+        //        0.0f, 0.0f, 0.0f,
+        //        1.0f, 1.0f
+        //    )
+        //);
+
+   
+        //objects.back()->addTransformation(
+        //    Transformation(
+        //        0.55f, 0.1f, 0.0f,
+        //        1.0f, 0.0f
+        //    )
+        //);
+     
         models.push_back(
             std::make_unique<Model>(
                 login,
@@ -171,8 +210,7 @@ void Scene::createModels()
             )
         );
 
-        loginModel =
-            models.back().get();
+        loginModel = models.back().get();
 
         objects.push_back(
             std::make_unique<DrawableObject>(
@@ -188,6 +226,7 @@ void Scene::createModels()
             )
         );
     }
+
     else if (sceneNumber == 2)
     {
         models.push_back(
