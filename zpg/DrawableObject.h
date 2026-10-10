@@ -14,8 +14,11 @@ private:
     ShaderProgram* shaderProgram;
 
     Transformation transformation;
-
     std::vector<Transformation> transformations;
+
+    float dynamicAmplitude = 0.0f;
+    float dynamicSpeed = 0.0f;
+    float dynamicOffsetY = 0.0f;
 
 public:
     DrawableObject(
@@ -26,6 +29,13 @@ public:
 
     void draw();
 
+    void update(float time);
+
+    void setDynamicVerticalMotion(
+        float amplitude,
+        float speed
+    );
+
     void setTransformation(
         const Transformation& value
     );
@@ -34,13 +44,7 @@ public:
         const Transformation& value
     );
 
-    void translate(
-        float x,
-        float y,
-        float z
-    );
-
+    void translate(float x, float y, float z);
     void changeScale(float value);
-
     void rotateY(float angle);
 };

@@ -668,6 +668,10 @@ void Scene::createModels()
                 )
             )
         );
+        objects.back()->setDynamicVerticalMotion(
+            0.07f,
+            1.3f
+        );
 
         models.push_back(
             std::make_unique<Model>(
@@ -725,9 +729,16 @@ void Scene::createModels()
 
 void Scene::update(GLFWwindow* window)
 {
+
     if (objects.empty())
     {
         return;
+    }
+    float time = static_cast<float>(glfwGetTime());
+
+    for (auto& object : objects)
+    {
+        object->update(time);
     }
 
     DrawableObject* object =
