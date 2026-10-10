@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="zpg/zpg.vcxproj" Id="b9dde33e-69ef-42ee-83b2-c208b10ff997" />
+</Solution>
