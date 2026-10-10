@@ -1,7 +1,9 @@
+
 #pragma once
 
 #include "Shader.h"
 
+#include <glm/glm.hpp>
 #include <memory>
 
 class ShaderProgram
@@ -35,6 +37,11 @@ public:
         float x,
         float y,
         float z
+    ) const;
+
+    void setUniform(
+        const char* name,
+        const glm::mat4& matrix
     ) const;
 
     unsigned int getId() const;

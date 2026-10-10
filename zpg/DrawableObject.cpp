@@ -1,3 +1,4 @@
+
 #include "DrawableObject.h"
 
 DrawableObject::DrawableObject(
@@ -14,21 +15,12 @@ void DrawableObject::draw()
 {
     shaderProgram->use();
 
-    shaderProgram->setUniform(
-        "offset",
-        transformation.getOffsetX(),
-        transformation.getOffsetY(),
-        transformation.getOffsetZ()
-    );
+    glm::mat4 modelMatrix =
+        transformation.getModelMatrix();
 
     shaderProgram->setUniform(
-        "scale",
-        transformation.getScale()
-    );
-
-    shaderProgram->setUniform(
-        "rotationY",
-        transformation.getRotationY()
+        "modelMatrix",
+        modelMatrix
     );
 
     model->draw();

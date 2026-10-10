@@ -1,4 +1,7 @@
+
 #pragma once
+
+#include <glm/glm.hpp>
 
 class Transformation
 {
@@ -17,8 +20,8 @@ public:
         float x,
         float y,
         float z,
-        float scale,
-        float rotationY
+        float scaleValue,
+        float rotationYValue
     );
 
     float getOffsetX() const;
@@ -28,13 +31,9 @@ public:
     float getScale() const;
     float getRotationY() const;
 
-    void translate(
-        float x,
-        float y,
-        float z
-    );
-
+    void translate(float x, float y, float z);
     void changeScale(float value);
-
     void rotateY(float angle);
+
+    glm::mat4 getModelMatrix() const;
 };

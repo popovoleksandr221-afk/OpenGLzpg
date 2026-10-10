@@ -111,7 +111,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\libraris\glfw-3.5.1.bin.WIN64\include\;$(ProjectDir)..\libraris\glm-master;$(ProjectDir)..\..\libraris\glad\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\libraris\glfw-3.5.1.bin.WIN64\include\;$(SolutionDir)..\libraris\glm-master;$(ProjectDir)..\..\libraris\glad\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

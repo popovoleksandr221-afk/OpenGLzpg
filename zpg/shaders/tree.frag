@@ -1,43 +1,20 @@
 #version 330 core
 
 in vec3 vertexPosition;
-in vec3 vertexNormal;
 
 out vec4 FragColor;
 
 void main()
 {
-    float distanceFromCenter =
-        length(
-            vec2(
-                vertexPosition.x,
-                vertexPosition.z
-            )
-        );
+    vec3 green = vec3(0.0, 0.6, 0.0);
+    vec3 brown = vec3(0.45, 0.25, 0.08);
 
-    float verticalNormal =
-        abs(vertexNormal.y);
-
-    if (
-        vertexPosition.y < 0.32 &&
-        distanceFromCenter < 0.055 &&
-        verticalNormal < 0.35
-    )
+    if (vertexPosition.y < -0.5)
     {
-        FragColor = vec4(
-            0.36,
-            0.16,
-            0.05,
-            1.0
-        );
+        FragColor = vec4(brown, 1.0);
     }
     else
     {
-        FragColor = vec4(
-            0.05,
-            0.45,
-            0.08,
-            1.0
-        );
+        FragColor = vec4(green, 1.0);
     }
 }

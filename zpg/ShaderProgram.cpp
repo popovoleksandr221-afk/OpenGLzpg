@@ -1,12 +1,16 @@
+
 #include "ShaderProgram.h"
 
 #include <glad/gl.h>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <cstdlib>
 #include <iostream>
+
 ShaderProgram::ShaderProgram(
     const char* vertexFile,
     const char* fragmentFile)
+    : id(0)
 {
     id = glCreateProgram();
 
@@ -91,11 +95,8 @@ void ShaderProgram::setUniform(
     const char* name,
     float value) const
 {
-    int location =
-        glGetUniformLocation(
-            id,
-            name
-        );
+    GLint location =
+        glGetUniformLocation(id, name);
 
     if (location == -1)
     {
@@ -119,11 +120,8 @@ void ShaderProgram::setUniform(
     float y,
     float z) const
 {
-    int location =
-        glGetUniformLocation(
-            id,
-            name
-        );
+    GLint location =
+        glGetUniformLocation(id, name);
 
     if (location == -1)
     {
@@ -143,7 +141,32 @@ void ShaderProgram::setUniform(
     );
 }
 
-GLuint ShaderProgram::getId() const
+void ShaderProgram::setUniform(
+    const char* name,
+    const glm::mat4& matrix) const
+{
+    GLint location =
+        glGetUniformLocation(id, name);
+
+    if (location == -1)
+    {
+        std::cerr
+            << "Uniform not found: "
+            << name
+            << std::endl;
+
+        return;
+    }
+
+    glUniformMatrix4fv(
+        location,
+        1,
+        GL_FALSE,
+        glm::value_ptr(matrix)
+    );
+}
+
+unsigned int ShaderProgram::getId() const
 {
     return id;
 }
