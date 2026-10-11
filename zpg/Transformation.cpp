@@ -1,5 +1,8 @@
+
 #include "Transformation.h"
+
 #include <glm/gtc/matrix_transform.hpp>
+
 Transformation::Transformation()
     : offsetX(0.0f),
     offsetY(0.0f),
@@ -48,7 +51,10 @@ float Transformation::getRotationY() const
     return rotationY;
 }
 
-void Transformation::translate(float x, float y, float z)
+void Transformation::translate(
+    float x,
+    float y,
+    float z)
 {
     offsetX += x;
     offsetY += y;
@@ -74,17 +80,20 @@ glm::mat4 Transformation::getModelMatrix() const
 {
     glm::mat4 model(1.0f);
 
+    // Translation
     model = glm::translate(
         model,
         glm::vec3(offsetX, offsetY, offsetZ)
     );
 
+    // Rotation around the Y axis
     model = glm::rotate(
         model,
         rotationY,
         glm::vec3(0.0f, 1.0f, 0.0f)
     );
 
+    // Uniform scaling
     model = glm::scale(
         model,
         glm::vec3(scale)

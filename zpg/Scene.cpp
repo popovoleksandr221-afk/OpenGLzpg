@@ -125,8 +125,10 @@ void Scene::createShaders()
 void Scene::createModels()
 {
 
+
     if (sceneNumber == 1)
     {
+        // Create triangle vertices
         const float trianglePoints[] =
         {
              0.0f,  0.5f, 0.0f,
@@ -139,6 +141,7 @@ void Scene::createModels()
              0.0f, 0.0f, 1.0f
         };
 
+        // Create triangle model
         models.push_back(
             std::make_unique<Model>(
                 trianglePoints,
@@ -149,6 +152,7 @@ void Scene::createModels()
 
         model = models.back().get();
 
+        // Create triangle drawable object
         objects.push_back(
             std::make_unique<DrawableObject>(
                 model,
@@ -163,9 +167,14 @@ void Scene::createModels()
             )
         );
 
-        /*T × R*/
-        objects.back()->addTransformation(
-            Transformation(
+        // Create a composite transformation
+        auto group = std::make_shared<CompositeTransformation>();
+       
+        
+        // T * R - Translation, then rotation
+        // Add translation
+        group->add(
+            std::make_shared<Transformation>(
                 0.55f,
                 0.1f,
                 0.0f,
@@ -174,9 +183,9 @@ void Scene::createModels()
             )
         );
 
-    
-        objects.back()->addTransformation(
-            Transformation(
+        // Add rotation around the Y axis
+        group->add(
+            std::make_shared<Transformation>(
                 0.0f,
                 0.0f,
                 0.0f,
@@ -184,24 +193,24 @@ void Scene::createModels()
                 1.0f
             )
         );
+        /*
+    // R * T - Rotation, then translation
+    group->add(
+    std::make_shared<Transformation>(
+        0.0f, 0.0f, 0.0f, 1.0f, 1.0f
+         )
+    );
 
-        /*R × T*/
+    group->add(
+    std::make_shared<Transformation>(
+        0.55f, 0.1f, 0.0f, 1.0f, 0.0f
+    )
+    );
+    */
+        // Assign composite transformation to triangle
+        objects.back()->addTransformation(group);
 
-        //objects.back()->addTransformation(
-        //    Transformation(
-        //        0.0f, 0.0f, 0.0f,
-        //        1.0f, 1.0f
-        //    )
-        //);
-
-   
-        //objects.back()->addTransformation(
-        //    Transformation(
-        //        0.55f, 0.1f, 0.0f,
-        //        1.0f, 0.0f
-        //    )
-        //);
-     
+        // Create login model
         models.push_back(
             std::make_unique<Model>(
                 login,
@@ -212,6 +221,7 @@ void Scene::createModels()
 
         loginModel = models.back().get();
 
+        // Create login drawable object
         objects.push_back(
             std::make_unique<DrawableObject>(
                 loginModel,
@@ -226,6 +236,7 @@ void Scene::createModels()
             )
         );
     }
+
 
     else if (sceneNumber == 2)
     {

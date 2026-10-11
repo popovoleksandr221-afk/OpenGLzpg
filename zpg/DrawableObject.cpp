@@ -10,23 +10,22 @@ DrawableObject::DrawableObject(
     const Transformation& transformationValue)
     : model(modelValue),
     shaderProgram(shaderProgramValue),
-    transformation(transformationValue)
+    transformation(
+        std::make_shared<Transformation>(transformationValue)
+    )
 {
+    composite.add(transformation);
 }
 
 void DrawableObject::draw()
 {
     shaderProgram->use();
 
+    // Calculate the combined model matrix
     glm::mat4 modelMatrix =
-        transformation.getModelMatrix();
+        composite.getModelMatrix();
 
-    for (const Transformation& t : transformations)
-    {
-        modelMatrix =
-            modelMatrix * t.getModelMatrix();
-    }
-
+    // Apply the dynamic vertical movement
     glm::mat4 dynamicMatrix(1.0f);
 
     dynamicMatrix = glm::translate(
@@ -47,8 +46,7 @@ void DrawableObject::draw()
 void DrawableObject::update(float time)
 {
     dynamicOffsetY =
-        dynamicAmplitude *
-        std::sin(time * dynamicSpeed);
+        dynamicAmplitude * std::sin(time * dynamicSpeed);
 }
 
 void DrawableObject::setDynamicVerticalMotion(
@@ -62,14 +60,24 @@ void DrawableObject::setDynamicVerticalMotion(
 void DrawableObject::setTransformation(
     const Transformation& value)
 {
-    transformation = value;
-    transformations.clear();
+    *transformation = value;
+
+    composite.clear();
+    composite.add(transformation);
 }
 
 void DrawableObject::addTransformation(
     const Transformation& value)
 {
-    transformations.push_back(value);
+    composite.add(
+        std::make_shared<Transformation>(value)
+    );
+}
+
+void DrawableObject::addTransformation(
+    std::shared_ptr<TransformationComponent> value)
+{
+    composite.add(value);
 }
 
 void DrawableObject::translate(
@@ -77,15 +85,15 @@ void DrawableObject::translate(
     float y,
     float z)
 {
-    transformation.translate(x, y, z);
+    transformation->translate(x, y, z);
 }
 
 void DrawableObject::changeScale(float value)
 {
-    transformation.changeScale(value);
+    transformation->changeScale(value);
 }
 
 void DrawableObject::rotateY(float angle)
 {
-    transformation.rotateY(angle);
+    transformation->rotateY(angle);
 }

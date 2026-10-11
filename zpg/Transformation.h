@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
+#include "TransformationComponent.h"
 
-class Transformation
+class Transformation : public TransformationComponent
 {
 private:
     float offsetX;
@@ -31,9 +31,15 @@ public:
     float getScale() const;
     float getRotationY() const;
 
-    void translate(float x, float y, float z);
+    void translate(
+        float x,
+        float y,
+        float z
+    );
+
     void changeScale(float value);
+
     void rotateY(float angle);
 
-    glm::mat4 getModelMatrix() const;
+    glm::mat4 getModelMatrix() const override;
 };

@@ -4,8 +4,9 @@
 #include "Model.h"
 #include "ShaderProgram.h"
 #include "Transformation.h"
+#include "CompositeTransformation.h"
 
-#include <vector>
+#include <memory>
 
 class DrawableObject
 {
@@ -13,8 +14,9 @@ private:
     Model* model;
     ShaderProgram* shaderProgram;
 
-    Transformation transformation;
-    std::vector<Transformation> transformations;
+    std::shared_ptr<Transformation> transformation;
+
+    CompositeTransformation composite;
 
     float dynamicAmplitude = 0.0f;
     float dynamicSpeed = 0.0f;
@@ -31,11 +33,6 @@ public:
 
     void update(float time);
 
-    void setDynamicVerticalMotion(
-        float amplitude,
-        float speed
-    );
-
     void setTransformation(
         const Transformation& value
     );
@@ -44,7 +41,22 @@ public:
         const Transformation& value
     );
 
-    void translate(float x, float y, float z);
+    void addTransformation(
+        std::shared_ptr<TransformationComponent> value
+    );
+
+    void setDynamicVerticalMotion(
+        float amplitude,
+        float speed
+    );
+
+    void translate(
+        float x,
+        float y,
+        float z
+    );
+
     void changeScale(float value);
+
     void rotateY(float angle);
 };
