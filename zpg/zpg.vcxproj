@@ -150,11 +150,13 @@
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
+    <ClCompile Include="TimeRotation.cpp" />
     <ClCompile Include="Transformation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\bush.frag" />
     <None Include="shaders\login.frag" />
+    <None Include="shaders\planet.frag" />
     <None Include="shaders\sphere.frag" />
     <None Include="shaders\common.vert" />
     <None Include="shaders\square.frag" />
@@ -170,15 +172,19 @@
     <ClInclude Include="login.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Models\bushes.h" />
+    <ClInclude Include="Models\earthVertices.h" />
     <ClInclude Include="Models\gift.h" />
+    <ClInclude Include="Models\moonVertices.h" />
     <ClInclude Include="Models\plain.h" />
     <ClInclude Include="Models\sphere.h" />
+    <ClInclude Include="Models\sunVertices.h" />
     <ClInclude Include="Models\suzi_flat.h" />
     <ClInclude Include="Models\suzi_smooth.h" />
     <ClInclude Include="Models\tree.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderProgram.h" />
+    <ClInclude Include="TimeRotation.h" />
     <ClInclude Include="Transformation.h" />
     <ClInclude Include="TransformationComponent.h" />
   </ItemGroup>

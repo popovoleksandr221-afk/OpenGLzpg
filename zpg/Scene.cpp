@@ -5,6 +5,12 @@
 #include "Models/bushes.h"
 #include "Models/login.h"
 #include <random>
+#include "TimeRotation.h"
+#include "CompositeTransformation.h"
+#include "Models/sunVertices.h"
+#include "Models/earthVertices.h"
+#include "Models/moonVertices.h"
+
 Scene::Scene(int sceneNumberValue)
     : sceneNumber(sceneNumberValue),
     shaderProgram(nullptr),
@@ -44,18 +50,20 @@ void Scene::createShaders()
         loginShaderProgram =
             shaderPrograms.back().get();
     }
+
     else if (sceneNumber == 2)
     {
+        // Shader program for Sun, Earth and Moon
         shaderPrograms.push_back(
             std::make_unique<ShaderProgram>(
                 "shaders/common.vert",
-                "shaders/sphere.frag"
+                "shaders/planet.frag"
             )
         );
 
-        shaderProgram =
-            shaderPrograms.back().get();
+        shaderProgram = shaderPrograms.back().get();
 
+        // Shader program for login
         shaderPrograms.push_back(
             std::make_unique<ShaderProgram>(
                 "shaders/common.vert",
@@ -63,9 +71,9 @@ void Scene::createShaders()
             )
         );
 
-        loginShaderProgram =
-            shaderPrograms.back().get();
+        loginShaderProgram = shaderPrograms.back().get();
     }
+
     else if (sceneNumber == 3)
     {
         shaderPrograms.push_back(
@@ -238,61 +246,172 @@ void Scene::createModels()
     }
 
 
-    else if (sceneNumber == 2)
-    {
-        models.push_back(
-            std::make_unique<Model>(
-                sphere,
-                sizeof(sphere),
-                static_cast<int>(
-                    sizeof(sphere) /
-                    (6 * sizeof(float))
-                    )
+else if (sceneNumber == 2)
+{
+    // Create Sun model
+    models.push_back(
+        std::make_unique<Model>(
+            sunVertices,
+            sizeof(sunVertices),
+            sunVerticesVertexCount
+        )
+    );
+
+    Model* sun = models.back().get();
+
+    // Create Earth model
+    models.push_back(
+        std::make_unique<Model>(
+            earthVertices,
+            sizeof(earthVertices),
+            earthVerticesVertexCount
+        )
+    );
+
+    Model* earth = models.back().get();
+
+    // Create Moon model
+    models.push_back(
+        std::make_unique<Model>(
+            moonVertices,
+            sizeof(moonVertices),
+            moonVerticesVertexCount
+        )
+    );
+
+    Model* moon = models.back().get();
+
+
+    // Create Sun
+    objects.push_back(
+        std::make_unique<DrawableObject>(
+            sun,
+            shaderProgram,
+            Transformation(
+                0.0f, 0.0f, 0.0f,
+                0.22f, 0.0f
             )
-        );
+        )
+    );
 
-        model =
-            models.back().get();
+    // Sun rotates around its own axis
+    objects.back()->addTransformation(
+        std::make_shared<TimeRotation>(
+            glm::vec3(0.0f, 1.0f, 0.0f),
+            0.3f
+        )
+    );
 
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                model,
-                shaderProgram,
-                Transformation(
-                    0.0f,
-                    0.05f,
-                    0.0f,
-                    0.5f,
-                    0.0f
-                )
+
+    // Create Earth's orbit around the Sun
+    auto earthOrbit =
+        std::make_shared<CompositeTransformation>();
+
+    // Orbital rotation in the XY plane
+    earthOrbit->add(
+        std::make_shared<TimeRotation>(
+            glm::vec3(0.0f, 0.0f, 1.0f),
+            0.45f
+        )
+    );
+
+    // Distance from Sun to Earth
+    earthOrbit->add(
+        std::make_shared<Transformation>(
+            0.68f, 0.0f, 0.0f,
+            1.0f, 0.0f
+        )
+    );
+
+
+    // Create Earth
+    objects.push_back(
+        std::make_unique<DrawableObject>(
+            earth,
+            shaderProgram,
+            Transformation(
+                0.0f, 0.0f, 0.0f,
+                1.0f, 0.0f
             )
-        );
+        )
+    );
 
-        models.push_back(
-            std::make_unique<Model>(
-                login,
-                sizeof(login),
-                loginVertexCount
+    // Apply Earth's orbit
+    objects.back()->addTransformation(earthOrbit);
+
+    // Earth size
+    objects.back()->addTransformation(
+        Transformation(
+            0.0f, 0.0f, 0.0f,
+            0.11f, 0.0f
+        )
+    );
+
+
+    // Create Moon
+    objects.push_back(
+        std::make_unique<DrawableObject>(
+            moon,
+            shaderProgram,
+            Transformation(
+                0.0f, 0.0f, 0.0f,
+                1.0f, 0.0f
             )
-        );
+        )
+    );
 
-        loginModel =
-            models.back().get();
+    // Moon follows Earth around the Sun
+    objects.back()->addTransformation(earthOrbit);
 
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                loginModel,
-                loginShaderProgram,
-                Transformation(
-                    0.0f,
-                    -0.85f,
-                    0.0f,
-                    0.10f,
-                    0.0f
-                )
+    // Moon revolves around Earth
+    objects.back()->addTransformation(
+        std::make_shared<TimeRotation>(
+            glm::vec3(0.0f, 0.0f, 1.0f),
+            0.8f
+        )
+    );
+
+    // Distance from Earth to Moon
+    objects.back()->addTransformation(
+        Transformation(
+            0.25f, 0.0f, 0.0f,
+            1.0f, 0.0f
+        )
+    );
+
+    // Moon size
+    objects.back()->addTransformation(
+        Transformation(
+            0.0f, 0.0f, 0.0f,
+            0.045f, 0.0f
+        )
+    );
+
+
+    // Create login model
+    models.push_back(
+        std::make_unique<Model>(
+            login,
+            sizeof(login),
+            loginVertexCount
+        )
+    );
+
+    loginModel = models.back().get();
+
+    // Create login drawable object
+    objects.push_back(
+        std::make_unique<DrawableObject>(
+            loginModel,
+            loginShaderProgram,
+            Transformation(
+                0.0f, -0.85f, 0.0f,
+                0.10f, 0.0f
             )
-        );
+        )
+    );
     }
+
 
     else if (sceneNumber == 3)
     {

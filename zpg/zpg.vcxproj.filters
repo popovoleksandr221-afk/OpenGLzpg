@@ -42,6 +42,9 @@
     <ClCompile Include="CompositeTransformation.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="TimeRotation.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\square.frag" />
@@ -53,6 +56,7 @@
     <None Include="shaders\login.frag" />
     <None Include="shaders\bush.frag" />
     <None Include="shaders\sun.frag" />
+    <None Include="shaders\planet.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Models\bushes.h">
@@ -104,6 +108,18 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="CompositeTransformation.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\earthVertices.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\moonVertices.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\sunVertices.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeRotation.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
