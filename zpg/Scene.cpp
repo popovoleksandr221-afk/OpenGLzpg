@@ -4,7 +4,7 @@
 #include "Models/tree.h"
 #include "Models/bushes.h"
 #include "Models/login.h"
-
+#include <random>
 Scene::Scene(int sceneNumberValue)
     : sceneNumber(sceneNumberValue),
     shaderProgram(nullptr),
@@ -293,418 +293,227 @@ void Scene::createModels()
             )
         );
     }
+
     else if (sceneNumber == 3)
     {
+        // Create tree model
         models.push_back(
             std::make_unique<Model>(
                 tree,
                 sizeof(tree),
                 static_cast<int>(
-                    sizeof(tree) /
-                    (6 * sizeof(float))
+                    sizeof(tree) / (6 * sizeof(float))
                     )
             )
         );
 
-        treeModel =
-            models.back().get();
+        treeModel = models.back().get();
 
+        // Create bush model
         models.push_back(
             std::make_unique<Model>(
                 bushes,
                 sizeof(bushes),
                 static_cast<int>(
-                    sizeof(bushes) /
-                    (6 * sizeof(float))
+                    sizeof(bushes) / (6 * sizeof(float))
                     )
             )
         );
 
-        bushModel =
-            models.back().get();
+        bushModel = models.back().get();
 
+        // Create sun model
         models.push_back(
             std::make_unique<Model>(
                 sphere,
                 sizeof(sphere),
                 static_cast<int>(
-                    sizeof(sphere) /
-                    (6 * sizeof(float))
+                    sizeof(sphere) / (6 * sizeof(float))
                     )
             )
         );
 
-        sunModel =
-            models.back().get();
+        sunModel = models.back().get();
 
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                treeModel,
-                treeShaderProgram,
-                Transformation(
-                    -0.88f,
-                    -0.65f,
-                    0.0f,
-                    0.055f,
-                    -0.2f
+
+        // Initialize random number generator
+        std::random_device rd;
+        std::mt19937 generator(rd());
+
+        // Random tree properties
+        std::uniform_real_distribution<float> treeX(
+            -0.85f, 0.85f
+        );
+
+        std::uniform_real_distribution<float> treeY(
+            -0.68f, 0.25f
+        );
+
+        std::uniform_real_distribution<float> treeScale(
+            0.045f, 0.065f
+        );
+
+        std::uniform_real_distribution<float> treeRotation(
+            -0.8f, 0.8f
+        );
+
+        // Random bush properties
+        std::uniform_real_distribution<float> bushX(
+            -0.90f, 0.90f
+        );
+
+        std::uniform_real_distribution<float> bushY(
+            -0.88f, -0.35f
+        );
+
+        std::uniform_real_distribution<float> bushScale(
+            0.09f, 0.13f
+        );
+
+        std::uniform_real_distribution<float> bushRotation(
+            -0.8f, 0.8f
+        );
+
+        // Store generated positions
+        std::vector<glm::vec2> treePositions;
+        std::vector<glm::vec2> bushPositions;
+
+
+        // Generate random trees
+        for (int i = 0; i < 12; i++)
+        {
+            glm::vec2 position;
+            bool validPosition = false;
+
+            // Find a suitable position
+            for (int attempt = 0; attempt < 100; attempt++)
+            {
+                position = glm::vec2(
+                    treeX(generator),
+                    treeY(generator)
+                );
+
+                validPosition = true;
+
+                // Check distance from existing trees
+                for (const glm::vec2& other : treePositions)
+                {
+                    if (glm::distance(position, other) < 0.25f)
+                    {
+                        validPosition = false;
+                        break;
+                    }
+                }
+
+                if (validPosition)
+                {
+                    break;
+                }
+            }
+
+            // Skip the tree if no suitable position was found
+            if (!validPosition)
+            {
+                continue;
+            }
+
+            treePositions.push_back(position);
+
+            float scale = treeScale(generator);
+            float rotation = treeRotation(generator);
+
+            // Create tree drawable object
+            objects.push_back(
+                std::make_unique<DrawableObject>(
+                    treeModel,
+                    treeShaderProgram,
+                    Transformation(
+                        position.x,
+                        position.y,
+                        0.0f,
+                        scale,
+                        rotation
+                    )
                 )
-            )
-        );
-        objects.back()->setTransformation(
-            Transformation(
-                -0.88f,
-                -0.65f,
-                0.0f,
-                0.055f,
-                -0.2f
-            )
-        );
+            );
 
-        objects.back()->addTransformation(
-            Transformation(
-                0.0f,
-                0.0f,
-                0.0f,
-                1.5f,
-                0.8f
-            )
-        );
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                treeModel,
-                treeShaderProgram,
-                Transformation(
-                    -0.58f,
-                    -0.40f,
-                    0.0f,
-                    0.065f,
-                    0.1f
+            // Add an extra transformation to the first tree
+            if (i == 0)
+            {
+                objects.back()->addTransformation(
+                    Transformation(
+                        0.0f,
+                        0.0f,
+                        0.0f,
+                        1.15f,
+                        0.3f
+                    )
+                );
+            }
+        }
+
+
+        // Generate random bushes
+        for (int i = 0; i < 13; i++)
+        {
+            glm::vec2 position;
+            bool validPosition = false;
+
+            // Find a suitable position
+            for (int attempt = 0; attempt < 100; attempt++)
+            {
+                position = glm::vec2(
+                    bushX(generator),
+                    bushY(generator)
+                );
+
+                validPosition = true;
+
+                // Check distance from existing bushes
+                for (const glm::vec2& other : bushPositions)
+                {
+                    if (glm::distance(position, other) < 0.13f)
+                    {
+                        validPosition = false;
+                        break;
+                    }
+                }
+
+                if (validPosition)
+                {
+                    break;
+                }
+            }
+
+            // Skip the bush if no suitable position was found
+            if (!validPosition)
+            {
+                continue;
+            }
+
+            bushPositions.push_back(position);
+
+            float scale = bushScale(generator);
+            float rotation = bushRotation(generator);
+
+            // Create bush drawable object
+            objects.push_back(
+                std::make_unique<DrawableObject>(
+                    bushModel,
+                    bushShaderProgram,
+                    Transformation(
+                        position.x,
+                        position.y,
+                        0.0f,
+                        scale,
+                        rotation
+                    )
                 )
-            )
-        );
+            );
+        }
 
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                treeModel,
-                treeShaderProgram,
-                Transformation(
-                    -0.30f,
-                    -0.68f,
-                    0.0f,
-                    0.050f,
-                    -0.15f
-                )
-            )
-        );
 
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                treeModel,
-                treeShaderProgram,
-                Transformation(
-                    -0.05f,
-                    -0.43f,
-                    0.0f,
-                    0.060f,
-                    0.2f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                treeModel,
-                treeShaderProgram,
-                Transformation(
-                    0.20f,
-                    -0.67f,
-                    0.0f,
-                    0.055f,
-                    -0.2f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                treeModel,
-                treeShaderProgram,
-                Transformation(
-                    0.43f,
-                    -0.40f,
-                    0.0f,
-                    0.065f,
-                    0.15f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                treeModel,
-                treeShaderProgram,
-                Transformation(
-                    0.68f,
-                    -0.66f,
-                    0.0f,
-                    0.055f,
-                    -0.1f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                treeModel,
-                treeShaderProgram,
-                Transformation(
-                    0.90f,
-                    -0.43f,
-                    0.0f,
-                    0.050f,
-                    0.2f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                treeModel,
-                treeShaderProgram,
-                Transformation(
-                    -0.72f,
-                    -0.05f,
-                    0.0f,
-                    0.045f,
-                    -0.2f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                treeModel,
-                treeShaderProgram,
-                Transformation(
-                    -0.38f,
-                    0.02f,
-                    0.0f,
-                    0.050f,
-                    0.1f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                treeModel,
-                treeShaderProgram,
-                Transformation(
-                    0.34f,
-                    0.0f,
-                    0.0f,
-                    0.045f,
-                    -0.15f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                treeModel,
-                treeShaderProgram,
-                Transformation(
-                    0.72f,
-                    0.03f,
-                    0.0f,
-                    0.050f,
-                    0.15f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                bushModel,
-                bushShaderProgram,
-                Transformation(
-                    -0.90f,
-                    -0.84f,
-                    0.0f,
-                    0.12f,
-                    0.0f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                bushModel,
-                bushShaderProgram,
-                Transformation(
-                    -0.73f,
-                    -0.80f,
-                    0.0f,
-                    0.10f,
-                    0.2f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                bushModel,
-                bushShaderProgram,
-                Transformation(
-                    -0.56f,
-                    -0.85f,
-                    0.0f,
-                    0.13f,
-                    -0.1f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                bushModel,
-                bushShaderProgram,
-                Transformation(
-                    -0.39f,
-                    -0.81f,
-                    0.0f,
-                    0.11f,
-                    0.15f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                bushModel,
-                bushShaderProgram,
-                Transformation(
-                    -0.22f,
-                    -0.86f,
-                    0.0f,
-                    0.12f,
-                    0.0f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                bushModel,
-                bushShaderProgram,
-                Transformation(
-                    -0.05f,
-                    -0.82f,
-                    0.0f,
-                    0.11f,
-                    -0.2f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                bushModel,
-                bushShaderProgram,
-                Transformation(
-                    0.12f,
-                    -0.85f,
-                    0.0f,
-                    0.13f,
-                    0.1f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                bushModel,
-                bushShaderProgram,
-                Transformation(
-                    0.30f,
-                    -0.81f,
-                    0.0f,
-                    0.11f,
-                    -0.15f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                bushModel,
-                bushShaderProgram,
-                Transformation(
-                    0.48f,
-                    -0.86f,
-                    0.0f,
-                    0.12f,
-                    0.1f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                bushModel,
-                bushShaderProgram,
-                Transformation(
-                    0.66f,
-                    -0.81f,
-                    0.0f,
-                    0.11f,
-                    0.2f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                bushModel,
-                bushShaderProgram,
-                Transformation(
-                    0.83f,
-                    -0.85f,
-                    0.0f,
-                    0.12f,
-                    -0.1f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                bushModel,
-                bushShaderProgram,
-                Transformation(
-                    -0.62f,
-                    -0.60f,
-                    0.0f,
-                    0.09f,
-                    0.1f
-                )
-            )
-        );
-
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                bushModel,
-                bushShaderProgram,
-                Transformation(
-                    0.60f,
-                    -0.58f,
-                    0.0f,
-                    0.09f,
-                    -0.1f
-                )
-            )
-        );
-
+        // Create sun
         objects.push_back(
             std::make_unique<DrawableObject>(
                 sunModel,
@@ -718,11 +527,15 @@ void Scene::createModels()
                 )
             )
         );
+
+        // Enable dynamic sun movement
         objects.back()->setDynamicVerticalMotion(
             0.07f,
             1.3f
         );
 
+
+        // Create login model
         models.push_back(
             std::make_unique<Model>(
                 login,
@@ -731,9 +544,9 @@ void Scene::createModels()
             )
         );
 
-        loginModel =
-            models.back().get();
+        loginModel = models.back().get();
 
+        // Create login drawable object
         objects.push_back(
             std::make_unique<DrawableObject>(
                 loginModel,
@@ -747,7 +560,8 @@ void Scene::createModels()
                 )
             )
         );
-    }
+        }
+
     else if (sceneNumber == 4)
     {
         models.push_back(
