@@ -1,5 +1,5 @@
-
 #include "DrawableObject.h"
+#include "Camera.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <cmath>
@@ -17,7 +17,7 @@ DrawableObject::DrawableObject(
     composite.add(transformation);
 }
 
-void DrawableObject::draw()
+void DrawableObject::draw(const Camera& camera)
 {
     shaderProgram->use();
 
@@ -35,9 +35,20 @@ void DrawableObject::draw()
 
     modelMatrix = dynamicMatrix * modelMatrix;
 
+    // Send all transformation matrices to the shader
     shaderProgram->setUniform(
         "modelMatrix",
         modelMatrix
+    );
+
+    shaderProgram->setUniform(
+        "viewMatrix",
+        camera.getViewMatrix()
+    );
+
+    shaderProgram->setUniform(
+        "projectionMatrix",
+        camera.getProjectionMatrix()
     );
 
     model->draw();

@@ -412,274 +412,367 @@ else if (sceneNumber == 2)
     );
     }
 
+else if (sceneNumber == 3)
+{
+    // Create tree model
+    models.push_back(
+        std::make_unique<Model>(
+            tree,
+            sizeof(tree),
+            static_cast<int>(
+                sizeof(tree) / (6 * sizeof(float))
+                )
+        )
+    );
 
-    else if (sceneNumber == 3)
+    treeModel = models.back().get();
+
+    // Create bush model
+    models.push_back(
+        std::make_unique<Model>(
+            bushes,
+            sizeof(bushes),
+            static_cast<int>(
+                sizeof(bushes) / (6 * sizeof(float))
+                )
+        )
+    );
+
+    bushModel = models.back().get();
+
+    // Create sun model
+    models.push_back(
+        std::make_unique<Model>(
+            sphere,
+            sizeof(sphere),
+            static_cast<int>(
+                sizeof(sphere) / (6 * sizeof(float))
+                )
+        )
+    );
+
+    sunModel = models.back().get();
+
+
+    // Ground height
+    const float groundY = -0.65f;
+
+    // Create ground using two triangles
+    const float ground[] =
     {
-        // Create tree model
-        models.push_back(
-            std::make_unique<Model>(
-                tree,
-                sizeof(tree),
-                static_cast<int>(
-                    sizeof(tree) / (6 * sizeof(float))
-                    )
+        -3.5f, groundY,  0.5f,  0.1f, 0.4f, 0.1f,
+         3.5f, groundY,  0.5f,  0.1f, 0.4f, 0.1f,
+         3.5f, groundY, -9.0f,  0.1f, 0.4f, 0.1f,
+
+        -3.5f, groundY,  0.5f,  0.1f, 0.4f, 0.1f,
+         3.5f, groundY, -9.0f,  0.1f, 0.4f, 0.1f,
+        -3.5f, groundY, -9.0f,  0.1f, 0.4f, 0.1f
+    };
+
+    // Create ground model
+    models.push_back(
+        std::make_unique<Model>(
+            ground,
+            sizeof(ground),
+            6
+        )
+    );
+
+    Model* groundModel = models.back().get();
+
+    // Add ground to the scene
+    objects.push_back(
+        std::make_unique<DrawableObject>(
+            groundModel,
+            bushShaderProgram,
+            Transformation(
+                0.0f,
+                0.0f,
+                0.0f,
+                1.0f,
+                0.0f
             )
-        );
-
-        treeModel = models.back().get();
-
-        // Create bush model
-        models.push_back(
-            std::make_unique<Model>(
-                bushes,
-                sizeof(bushes),
-                static_cast<int>(
-                    sizeof(bushes) / (6 * sizeof(float))
-                    )
-            )
-        );
-
-        bushModel = models.back().get();
-
-        // Create sun model
-        models.push_back(
-            std::make_unique<Model>(
-                sphere,
-                sizeof(sphere),
-                static_cast<int>(
-                    sizeof(sphere) / (6 * sizeof(float))
-                    )
-            )
-        );
-
-        sunModel = models.back().get();
+        )
+    );
 
 
-        // Initialize random number generator
-        std::random_device rd;
-        std::mt19937 generator(rd());
+    // Find the lowest and highest tree vertices
+    float treeMinY = tree[1];
+    float treeMaxY = tree[1];
 
-        // Random tree properties
-        std::uniform_real_distribution<float> treeX(
-            -0.85f, 0.85f
-        );
-
-        std::uniform_real_distribution<float> treeY(
-            -0.68f, 0.25f
-        );
-
-        std::uniform_real_distribution<float> treeScale(
-            0.045f, 0.065f
-        );
-
-        std::uniform_real_distribution<float> treeRotation(
-            -0.8f, 0.8f
-        );
-
-        // Random bush properties
-        std::uniform_real_distribution<float> bushX(
-            -0.90f, 0.90f
-        );
-
-        std::uniform_real_distribution<float> bushY(
-            -0.88f, -0.35f
-        );
-
-        std::uniform_real_distribution<float> bushScale(
-            0.09f, 0.13f
-        );
-
-        std::uniform_real_distribution<float> bushRotation(
-            -0.8f, 0.8f
-        );
-
-        // Store generated positions
-        std::vector<glm::vec2> treePositions;
-        std::vector<glm::vec2> bushPositions;
-
-
-        // Generate random trees
-        for (int i = 0; i < 12; i++)
+    for (size_t i = 1;
+        i < sizeof(tree) / sizeof(float);
+        i += 6)
+    {
+        if (tree[i] < treeMinY)
         {
-            glm::vec2 position;
-            bool validPosition = false;
+            treeMinY = tree[i];
+        }
 
-            // Find a suitable position
-            for (int attempt = 0; attempt < 100; attempt++)
+        if (tree[i] > treeMaxY)
+        {
+            treeMaxY = tree[i];
+        }
+    }
+
+    // Find the lowest and highest bush vertices
+    float bushMinY = bushes[1];
+    float bushMaxY = bushes[1];
+
+    for (size_t i = 1;
+        i < sizeof(bushes) / sizeof(float);
+        i += 6)
+    {
+        if (bushes[i] < bushMinY)
+        {
+            bushMinY = bushes[i];
+        }
+
+        if (bushes[i] > bushMaxY)
+        {
+            bushMaxY = bushes[i];
+        }
+    }
+
+    float treeModelHeight = treeMaxY - treeMinY;
+    float bushModelHeight = bushMaxY - bushMinY;
+
+
+    // Initialize random number generator
+    std::random_device rd;
+    std::mt19937 generator(rd());
+
+    // Random tree properties
+    std::uniform_real_distribution<float> treeX(
+        -2.8f, 2.8f
+    );
+
+    std::uniform_real_distribution<float> treeZ(
+        -6.5f, -0.5f
+    );
+
+    std::uniform_real_distribution<float> treeHeight(
+        1.0f, 1.6f
+    );
+
+    std::uniform_real_distribution<float> treeRotation(
+        -0.8f, 0.8f
+    );
+
+    // Random bush properties
+    std::uniform_real_distribution<float> bushX(
+        -2.8f, 2.8f
+    );
+
+    std::uniform_real_distribution<float> bushZ(
+        -6.5f, 0.0f
+    );
+
+    std::uniform_real_distribution<float> bushHeight(
+        0.12f, 0.28f
+    );
+
+    std::uniform_real_distribution<float> bushRotation(
+        -0.8f, 0.8f
+    );
+
+    // Store positions on the XZ ground plane
+    std::vector<glm::vec2> treePositions;
+    std::vector<glm::vec2> bushPositions;
+
+
+    // Generate random trees
+    for (int i = 0; i < 12; i++)
+    {
+        glm::vec2 position;
+        bool validPosition = false;
+
+        // Find a suitable position
+        for (int attempt = 0; attempt < 100; attempt++)
+        {
+            position = glm::vec2(
+                treeX(generator),
+                treeZ(generator)
+            );
+
+            validPosition = true;
+
+            // Check distance from existing trees
+            for (const glm::vec2& other : treePositions)
             {
-                position = glm::vec2(
-                    treeX(generator),
-                    treeY(generator)
-                );
-
-                validPosition = true;
-
-                // Check distance from existing trees
-                for (const glm::vec2& other : treePositions)
+                if (glm::distance(position, other) < 0.85f)
                 {
-                    if (glm::distance(position, other) < 0.25f)
-                    {
-                        validPosition = false;
-                        break;
-                    }
-                }
-
-                if (validPosition)
-                {
+                    validPosition = false;
                     break;
                 }
             }
 
-            // Skip the tree if no suitable position was found
-            if (!validPosition)
+            if (validPosition)
             {
-                continue;
-            }
-
-            treePositions.push_back(position);
-
-            float scale = treeScale(generator);
-            float rotation = treeRotation(generator);
-
-            // Create tree drawable object
-            objects.push_back(
-                std::make_unique<DrawableObject>(
-                    treeModel,
-                    treeShaderProgram,
-                    Transformation(
-                        position.x,
-                        position.y,
-                        0.0f,
-                        scale,
-                        rotation
-                    )
-                )
-            );
-
-            // Add an extra transformation to the first tree
-            if (i == 0)
-            {
-                objects.back()->addTransformation(
-                    Transformation(
-                        0.0f,
-                        0.0f,
-                        0.0f,
-                        1.15f,
-                        0.3f
-                    )
-                );
+                break;
             }
         }
 
-
-        // Generate random bushes
-        for (int i = 0; i < 13; i++)
+        if (!validPosition)
         {
-            glm::vec2 position;
-            bool validPosition = false;
+            continue;
+        }
 
-            // Find a suitable position
-            for (int attempt = 0; attempt < 100; attempt++)
+        treePositions.push_back(position);
+
+        // Calculate scale from the desired tree height
+        float height = treeHeight(generator);
+        float scale = height / treeModelHeight;
+
+        float rotation = treeRotation(generator);
+
+        // Place the tree base on the ground
+        float y = groundY - treeMinY * scale;
+
+        // Create tree drawable object
+        objects.push_back(
+            std::make_unique<DrawableObject>(
+                treeModel,
+                treeShaderProgram,
+                Transformation(
+                    position.x,
+                    y,
+                    position.y,
+                    scale,
+                    rotation
+                )
+            )
+        );
+
+        // Add an extra transformation to the first tree
+        if (i == 0)
+        {
+            objects.back()->addTransformation(
+                Transformation(
+                    0.0f,
+                    0.0f,
+                    0.0f,
+                    1.15f,
+                    0.3f
+                )
+            );
+        }
+    }
+
+
+    // Generate random bushes
+    for (int i = 0; i < 13; i++)
+    {
+        glm::vec2 position;
+        bool validPosition = false;
+
+        // Find a suitable position
+        for (int attempt = 0; attempt < 100; attempt++)
+        {
+            position = glm::vec2(
+                bushX(generator),
+                bushZ(generator)
+            );
+
+            validPosition = true;
+
+            // Check distance from existing bushes
+            for (const glm::vec2& other : bushPositions)
             {
-                position = glm::vec2(
-                    bushX(generator),
-                    bushY(generator)
-                );
-
-                validPosition = true;
-
-                // Check distance from existing bushes
-                for (const glm::vec2& other : bushPositions)
+                if (glm::distance(position, other) < 0.35f)
                 {
-                    if (glm::distance(position, other) < 0.13f)
-                    {
-                        validPosition = false;
-                        break;
-                    }
-                }
-
-                if (validPosition)
-                {
+                    validPosition = false;
                     break;
                 }
             }
 
-            // Skip the bush if no suitable position was found
-            if (!validPosition)
+            if (validPosition)
             {
-                continue;
+                break;
             }
-
-            bushPositions.push_back(position);
-
-            float scale = bushScale(generator);
-            float rotation = bushRotation(generator);
-
-            // Create bush drawable object
-            objects.push_back(
-                std::make_unique<DrawableObject>(
-                    bushModel,
-                    bushShaderProgram,
-                    Transformation(
-                        position.x,
-                        position.y,
-                        0.0f,
-                        scale,
-                        rotation
-                    )
-                )
-            );
         }
 
-
-        // Create sun
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                sunModel,
-                sunShaderProgram,
-                Transformation(
-                    0.78f,
-                    0.72f,
-                    0.0f,
-                    0.16f,
-                    0.0f
-                )
-            )
-        );
-
-        // Enable dynamic sun movement
-        objects.back()->setDynamicVerticalMotion(
-            0.07f,
-            1.3f
-        );
-
-
-        // Create login model
-        models.push_back(
-            std::make_unique<Model>(
-                login,
-                sizeof(login),
-                loginVertexCount
-            )
-        );
-
-        loginModel = models.back().get();
-
-        // Create login drawable object
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                loginModel,
-                loginShaderProgram,
-                Transformation(
-                    0.0f,
-                    -0.94f,
-                    0.0f,
-                    0.06f,
-                    0.0f
-                )
-            )
-        );
+        if (!validPosition)
+        {
+            continue;
         }
+
+        bushPositions.push_back(position);
+
+        // Calculate scale from the desired bush height
+        float height = bushHeight(generator);
+        float scale = height / bushModelHeight;
+
+        float rotation = bushRotation(generator);
+
+        // Place the bush base on the ground
+        float y = groundY - bushMinY * scale;
+
+        // Create bush drawable object
+        objects.push_back(
+            std::make_unique<DrawableObject>(
+                bushModel,
+                bushShaderProgram,
+                Transformation(
+                    position.x,
+                    y,
+                    position.y,
+                    scale,
+                    rotation
+                )
+            )
+        );
+    }
+
+
+    // Create sun
+    objects.push_back(
+        std::make_unique<DrawableObject>(
+            sunModel,
+            sunShaderProgram,
+            Transformation(
+                0.78f,
+                0.72f,
+                0.0f,
+                0.16f,
+                0.0f
+            )
+        )
+    );
+
+    // Enable dynamic sun movement
+    objects.back()->setDynamicVerticalMotion(
+        0.07f,
+        1.3f
+    );
+
+
+    // Create login model
+    models.push_back(
+        std::make_unique<Model>(
+            login,
+            sizeof(login),
+            loginVertexCount
+        )
+    );
+
+    loginModel = models.back().get();
+
+    // Create login drawable object
+    objects.push_back(
+        std::make_unique<DrawableObject>(
+            loginModel,
+            loginShaderProgram,
+            Transformation(
+                0.0f,
+                -0.94f,
+                0.0f,
+                0.06f,
+                0.0f
+            )
+        )
+    );
+    }
 
     else if (sceneNumber == 4)
     {
@@ -718,10 +811,15 @@ void Scene::update(GLFWwindow* window)
         return;
     }
     float time = static_cast<float>(glfwGetTime());
-
     for (auto& object : objects)
     {
         object->update(time);
+    }
+
+
+    if (sceneNumber == 3)
+    {
+        return;
     }
 
     DrawableObject* object =
@@ -796,10 +894,10 @@ void Scene::update(GLFWwindow* window)
     }
 }
 
-void Scene::draw()
+void Scene::draw(const Camera& camera)
 {
     for (const auto& object : objects)
     {
-        object->draw();
+        object->draw(camera);
     }
 }

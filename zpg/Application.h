@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "Scene.h"
+#include "Camera.h"
 
 class Application
 {
@@ -16,6 +17,8 @@ private:
     std::vector<std::unique_ptr<Scene>> scenes;
 
     int activeScene;
+
+    Camera camera;
 
     static void error_callback(
         int error,
@@ -30,7 +33,7 @@ private:
         int mods
     );
 
-    static void window_size_callback(
+    static void framebuffer_size_callback(
         GLFWwindow* window,
         int width,
         int height

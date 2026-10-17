@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "Model.h"
@@ -7,6 +6,8 @@
 #include "CompositeTransformation.h"
 
 #include <memory>
+
+class Camera;
 
 class DrawableObject
 {
@@ -29,7 +30,7 @@ public:
         const Transformation& transformation
     );
 
-    void draw();
+    void draw(const Camera& camera);
 
     void update(float time);
 

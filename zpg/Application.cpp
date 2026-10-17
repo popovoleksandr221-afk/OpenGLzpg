@@ -109,7 +109,7 @@ void Application::key_callback(
     );
 }
 
-void Application::window_size_callback(
+void Application::framebuffer_size_callback(
     GLFWwindow* window,
     int width,
     int height)
@@ -126,6 +126,16 @@ void Application::window_size_callback(
         width,
         height
     );
+
+    Application* application =
+        static_cast<Application*>(
+            glfwGetWindowUserPointer(window)
+            );
+
+    if (application != nullptr)
+    {
+        application->camera.resize(width, height);
+    }
 }
 
 void Application::initialization()
@@ -216,9 +226,9 @@ void Application::initialization()
         key_callback
     );
 
-    glfwSetWindowSizeCallback(
+    glfwSetFramebufferSizeCallback(
         window,
-        window_size_callback
+        framebuffer_size_callback
     );
 
     int width;
@@ -236,6 +246,8 @@ void Application::initialization()
         width,
         height
     );
+
+    camera.resize(width, height);
 
     glEnable(GL_DEPTH_TEST);
 }
@@ -283,7 +295,7 @@ void Application::run()
 
         scenes[activeScene]->update(window);
 
-        scenes[activeScene]->draw();
+        scenes[activeScene]->draw(camera);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

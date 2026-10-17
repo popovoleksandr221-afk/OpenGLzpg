@@ -3,6 +3,7 @@
 #include "DrawableObject.h"
 #include "Model.h"
 #include "ShaderProgram.h"
+#include "Camera.h"
 
 #include <GLFW/glfw3.h>
 
@@ -37,5 +38,5 @@ public:
     void createModels();
 
     void update(GLFWwindow* window);
-    void draw();
+    void draw(const Camera& camera);
 };
