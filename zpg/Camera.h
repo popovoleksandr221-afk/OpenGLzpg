@@ -14,6 +14,11 @@ private:
     float nearPlane;
     float farPlane;
 
+    float yaw;
+    float pitch;
+    float moveSpeed;
+    float mouseSensitivity;
+
 public:
     Camera();
 
@@ -21,4 +26,15 @@ public:
     glm::mat4 getProjectionMatrix() const;
 
     void resize(int width, int height);
+
+    void move(
+        float forwardInput,
+        float rightInput,
+        float deltaTime
+    );
+
+    void lookAround(
+        double deltaX,
+        double deltaY
+    );
 };

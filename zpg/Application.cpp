@@ -9,7 +9,10 @@
 
 Application::Application()
     : window(nullptr),
-    activeScene(0)
+    activeScene(0),
+    rightMouseHeld(false),
+    lastMouseX(0.0),
+    lastMouseY(0.0)
 {
     scenes.push_back(
         std::make_unique<Scene>(1)
@@ -59,7 +62,8 @@ void Application::key_callback(
     int action,
     int mods)
 {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    if (key == GLFW_KEY_ESCAPE &&
+        action == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(
             window,
@@ -134,7 +138,15 @@ void Application::framebuffer_size_callback(
 
     if (application != nullptr)
     {
-        application->camera.resize(width, height);
+        application->camera.resize(
+            width,
+            height
+        );
+
+        application->forestCamera.resize(
+            width,
+            height
+        );
     }
 }
 
@@ -197,7 +209,6 @@ void Application::initialization()
         window = nullptr;
 
         glfwTerminate();
-
         std::exit(EXIT_FAILURE);
     }
 
@@ -248,6 +259,7 @@ void Application::initialization()
     );
 
     camera.resize(width, height);
+    forestCamera.resize(width, height);
 
     glEnable(GL_DEPTH_TEST);
 }
@@ -278,6 +290,9 @@ void Application::switchScene(int sceneIndex)
 
     activeScene = sceneIndex;
 
+    // Reset mouse tracking when switching scenes
+    rightMouseHeld = false;
+
     std::printf(
         "Active scene: %d\n",
         activeScene + 1
@@ -286,8 +301,115 @@ void Application::switchScene(int sceneIndex)
 
 void Application::run()
 {
+    double previousTime = glfwGetTime();
+
     while (!glfwWindowShouldClose(window))
     {
+        double currentTime = glfwGetTime();
+
+        float deltaTime =
+            static_cast<float>(
+                currentTime - previousTime
+                );
+
+        previousTime = currentTime;
+
+        // Prevent large jumps after losing window focus
+        if (deltaTime > 0.1f)
+        {
+            deltaTime = 0.1f;
+        }
+
+        // Enable camera control only in the forest scene
+        if (activeScene == 2 &&
+            glfwGetWindowAttrib(
+                window,
+                GLFW_FOCUSED
+            ) == GLFW_TRUE)
+        {
+            float forward = 0.0f;
+            float right = 0.0f;
+
+            // Move forward
+            if (glfwGetKey(
+                window,
+                GLFW_KEY_W
+            ) == GLFW_PRESS)
+            {
+                forward += 1.0f;
+            }
+
+            // Move backward
+            if (glfwGetKey(
+                window,
+                GLFW_KEY_S
+            ) == GLFW_PRESS)
+            {
+                forward -= 1.0f;
+            }
+
+            // Move right
+            if (glfwGetKey(
+                window,
+                GLFW_KEY_D
+            ) == GLFW_PRESS)
+            {
+                right += 1.0f;
+            }
+
+            // Move left
+            if (glfwGetKey(
+                window,
+                GLFW_KEY_A
+            ) == GLFW_PRESS)
+            {
+                right -= 1.0f;
+            }
+
+            forestCamera.move(
+                forward,
+                right,
+                deltaTime
+            );
+
+            // Rotate camera only while holding right mouse button
+            if (glfwGetMouseButton(
+                window,
+                GLFW_MOUSE_BUTTON_RIGHT
+            ) == GLFW_PRESS)
+            {
+                double mouseX;
+                double mouseY;
+
+                glfwGetCursorPos(
+                    window,
+                    &mouseX,
+                    &mouseY
+                );
+
+                if (rightMouseHeld)
+                {
+                    forestCamera.lookAround(
+                        mouseX - lastMouseX,
+                        lastMouseY - mouseY
+                    );
+                }
+
+                lastMouseX = mouseX;
+                lastMouseY = mouseY;
+
+                rightMouseHeld = true;
+            }
+            else
+            {
+                rightMouseHeld = false;
+            }
+        }
+        else
+        {
+            rightMouseHeld = false;
+        }
+
         glClear(
             GL_COLOR_BUFFER_BIT |
             GL_DEPTH_BUFFER_BIT
@@ -295,7 +417,22 @@ void Application::run()
 
         scenes[activeScene]->update(window);
 
-        scenes[activeScene]->draw(camera);
+        if (activeScene == 2)
+        {
+            // Draw forest with movable camera
+            // Draw login with static camera
+            scenes[activeScene]->draw(
+                forestCamera,
+                camera
+            );
+        }
+        else
+        {
+            scenes[activeScene]->draw(
+                camera,
+                camera
+            );
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();

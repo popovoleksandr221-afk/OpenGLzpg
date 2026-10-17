@@ -18,7 +18,15 @@ private:
 
     int activeScene;
 
+    // Static camera for other scenes
     Camera camera;
+
+    // Camera used for walking through the forest
+    Camera forestCamera;
+
+    bool rightMouseHeld;
+    double lastMouseX;
+    double lastMouseY;
 
     static void error_callback(
         int error,

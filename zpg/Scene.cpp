@@ -894,8 +894,29 @@ void Scene::update(GLFWwindow* window)
     }
 }
 
-void Scene::draw(const Camera& camera)
+void Scene::draw(
+    const Camera& camera,
+    const Camera& overlayCamera)
 {
+    if (sceneNumber == 3 && !objects.empty())
+    {
+        // Draw the forest using the movable camera
+        for (size_t i = 0; i + 1 < objects.size(); i++)
+        {
+            objects[i]->draw(camera);
+        }
+
+        // Draw the login using the static camera
+        glDisable(GL_DEPTH_TEST);
+
+        objects.back()->draw(overlayCamera);
+
+        glEnable(GL_DEPTH_TEST);
+
+        return;
+    }
+
+    // Draw all objects in other scenes normally
     for (const auto& object : objects)
     {
         object->draw(camera);

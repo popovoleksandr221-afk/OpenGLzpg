@@ -38,5 +38,9 @@ public:
     void createModels();
 
     void update(GLFWwindow* window);
-    void draw(const Camera& camera);
+
+    void draw(
+        const Camera& camera,
+        const Camera& overlayCamera
+    );
 };
