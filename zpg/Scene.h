@@ -38,5 +38,6 @@ public:
     void createShaders();
     void createModels();
     void update(GLFWwindow* window);
-    void draw(const Camera& camera, const Camera& overlayCamera);
+    void observeCameras(Camera& camera, Camera& forestCamera);
+    void draw();
 };

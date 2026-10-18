@@ -142,6 +142,7 @@ void Application::createShaders()
     for (const auto& scene : scenes)
     {
         scene->createShaders();
+        scene->observeCameras(camera, forestCamera);
     }
 
 }
@@ -231,14 +232,8 @@ void Application::run()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         scenes[activeScene]->update(window);
-        if (activeScene == 2)
-        {
-            scenes[activeScene]->draw(forestCamera, camera);
-        }
-        else
-        {
-            scenes[activeScene]->draw(camera, camera);
-        }
+        // Scene shaders already observe the correct camera.
+        scenes[activeScene]->draw();
 
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -1,6 +1,8 @@
 #include "Camera.h"
+#include "ICameraObserver.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <algorithm>
 #include <cmath>
 
 Camera::Camera()
@@ -20,21 +22,47 @@ Camera::Camera()
 
 glm::mat4 Camera::getViewMatrix() const
 {
-    return glm::lookAt(
-        eye,
-        center,
-        up
-    );
+    return glm::lookAt(eye, center, up);
 }
 
 glm::mat4 Camera::getProjectionMatrix() const
 {
     return glm::perspective(
-        glm::radians(fov),
-        aspectRatio,
-        nearPlane,
-        farPlane
+        glm::radians(fov), aspectRatio, nearPlane, farPlane
     );
+}
+
+void Camera::addObserver(ICameraObserver& observer)
+{
+    // Prevent duplicate subscriptions.
+    if (std::find(observers.begin(), observers.end(), &observer) != observers.end())
+    {
+        return;
+    }
+
+    observers.push_back(&observer);
+
+    // Immediately send the current matrices to new observers.
+    observer.onCameraChanged(getViewMatrix(), getProjectionMatrix());
+}
+
+void Camera::removeObserver(ICameraObserver& observer)
+{
+    observers.erase(
+        std::remove(observers.begin(), observers.end(), &observer),
+        observers.end()
+    );
+}
+
+void Camera::notifyObservers()
+{
+    const glm::mat4 view = getViewMatrix();
+    const glm::mat4 projection = getProjectionMatrix();
+
+    for (ICameraObserver* observer : observers)
+    {
+        observer->onCameraChanged(view, projection);
+    }
 }
 
 void Camera::resize(int width, int height)
@@ -44,73 +72,48 @@ void Camera::resize(int width, int height)
         return;
     }
 
-    aspectRatio =
-        static_cast<float>(width) /
-        static_cast<float>(height);
+    aspectRatio = static_cast<float>(width) / static_cast<float>(height);
+    notifyObservers();
 }
 
-void Camera::move(
-    float forwardInput,
-    float rightInput,
-    float deltaTime)
+void Camera::move(float forwardInput, float rightInput, float deltaTime)
 {
-    // Keep walking on the horizontal XZ plane
+    // Keep walking on the horizontal XZ plane.
     glm::vec3 forward = center - eye;
     forward.y = 0.0f;
-
     forward = glm::normalize(forward);
 
-    glm::vec3 right =
-        glm::normalize(glm::cross(forward, up));
+    const glm::vec3 right = glm::normalize(glm::cross(forward, up));
+    const glm::vec3 direction = forward * forwardInput + right * rightInput;
 
-    glm::vec3 direction =
-        forward * forwardInput +
-        right * rightInput;
-
-    // Prevent faster diagonal movement
+    // Prevent faster diagonal movement.
     if (glm::length(direction) > 0.0f)
     {
-        glm::vec3 movement =
-            glm::normalize(direction) *
-            moveSpeed *
-            deltaTime;
+        const glm::vec3 movement =
+            glm::normalize(direction) * moveSpeed * deltaTime;
 
         eye += movement;
         center += movement;
+        notifyObservers();
     }
 }
 
-void Camera::lookAround(
-    double deltaX,
-    double deltaY)
+void Camera::lookAround(double deltaX, double deltaY)
 {
-    yaw +=
-        static_cast<float>(deltaX) *
-        mouseSensitivity;
+    yaw += static_cast<float>(deltaX) * mouseSensitivity;
+    pitch += static_cast<float>(deltaY) * mouseSensitivity;
 
-    pitch +=
-        static_cast<float>(deltaY) *
-        mouseSensitivity;
+    pitch = glm::clamp(pitch, -85.0f, 85.0f);
 
-    // Prevent looking exactly straight up or down
-    pitch = glm::clamp(
-        pitch,
-        -85.0f,
-        85.0f
-    );
+    const float yawRadians = glm::radians(yaw);
+    const float pitchRadians = glm::radians(pitch);
 
-    float yawRadians = glm::radians(yaw);
-    float pitchRadians = glm::radians(pitch);
-
-    glm::vec3 direction(
-        std::cos(yawRadians) *
-        std::cos(pitchRadians),
-
+    const glm::vec3 direction(
+        std::cos(yawRadians) * std::cos(pitchRadians),
         std::sin(pitchRadians),
-
-        std::sin(yawRadians) *
-        std::cos(pitchRadians)
+        std::sin(yawRadians) * std::cos(pitchRadians)
     );
 
     center = eye + glm::normalize(direction);
+    notifyObservers();
 }

@@ -7,8 +7,6 @@
 
 #include <memory>
 
-class Camera;
-
 class DrawableObject
 {
 private:
@@ -16,7 +14,6 @@ private:
     ShaderProgram* shaderProgram;
 
     std::shared_ptr<Transformation> transformation;
-
     CompositeTransformation composite;
 
     float dynamicAmplitude = 0.0f;
@@ -30,34 +27,16 @@ public:
         const Transformation& transformation
     );
 
-    void draw(const Camera& camera);
-
+    void draw();
     void update(float time);
 
-    void setTransformation(
-        const Transformation& value
-    );
+    void setTransformation(const Transformation& value);
+    void addTransformation(const Transformation& value);
+    void addTransformation(std::shared_ptr<TransformationComponent> value);
 
-    void addTransformation(
-        const Transformation& value
-    );
+    void setDynamicVerticalMotion(float amplitude, float speed);
 
-    void addTransformation(
-        std::shared_ptr<TransformationComponent> value
-    );
-
-    void setDynamicVerticalMotion(
-        float amplitude,
-        float speed
-    );
-
-    void translate(
-        float x,
-        float y,
-        float z
-    );
-
+    void translate(float x, float y, float z);
     void changeScale(float value);
-
     void rotateY(float angle);
 };

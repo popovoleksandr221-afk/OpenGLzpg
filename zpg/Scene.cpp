@@ -837,7 +837,22 @@ void Scene::update(GLFWwindow* window)
     }
 }
 
-void Scene::draw(const Camera& camera, const Camera& overlayCamera)
+// Subscribe each shader program to the camera it actually uses.
+void Scene::observeCameras(Camera& camera, Camera& forestCamera)
+{
+    for (const auto& program : shaderPrograms)
+    {
+        // Forest login remains fixed; other forest objects use WASD camera.
+        Camera& selectedCamera =
+            (sceneNumber == 3 && program.get() != loginShaderProgram)
+            ? forestCamera
+            : camera;
+
+        program->observeCamera(selectedCamera);
+    }
+}
+
+void Scene::draw()
 {
     if (sceneNumber == 5)
     {
@@ -852,9 +867,7 @@ void Scene::draw(const Camera& camera, const Camera& overlayCamera)
 
         clockShaderProgram->setUniform("modelMatrix", glm::mat4(1.0f));
         clockShaderProgram->setUniform("viewMatrix", clockView);
-        clockShaderProgram->setUniform(
-            "projectionMatrix", camera.getProjectionMatrix()
-        );
+        // Projection matrix is already supplied by the Camera observer.
 
         setClockAngles(clockShaderProgram);
 
@@ -865,7 +878,7 @@ void Scene::draw(const Camera& camera, const Camera& overlayCamera)
         glDisable(GL_DEPTH_TEST);
         for (const auto& object : objects)
         {
-            object->draw(overlayCamera);
+            object->draw();
         }
         glEnable(GL_DEPTH_TEST);
         return;
@@ -879,18 +892,18 @@ void Scene::draw(const Camera& camera, const Camera& overlayCamera)
         // Draw the forest with the movable camera.
         for (size_t i = 0; i + 1 < objects.size(); ++i)
         {
-            objects[i]->draw(camera);
+            objects[i]->draw();
         }
 
         // Keep the login in place while moving the forest camera.
         glDisable(GL_DEPTH_TEST);
-        objects.back()->draw(overlayCamera);
+        objects.back()->draw();
         glEnable(GL_DEPTH_TEST);
         return;
     }
 
     for (const auto& object : objects)
     {
-        object->draw(camera);
+        object->draw();
     }
 }
