@@ -17,6 +17,28 @@
 #include "Models/earthVertices.h"
 #include "Models/moonVertices.h"
 
+// Update the three hands without separating the clock geometry.
+static void setClockAngles(ShaderProgram* program)
+{
+    const std::time_t now = std::time(nullptr);
+    std::tm localTime{};
+#ifdef _WIN32
+    localtime_s(&localTime, &now);
+#else
+    localtime_r(&now, &localTime);
+#endif
+
+    const float seconds = static_cast<float>(localTime.tm_sec);
+    const float minutes = static_cast<float>(localTime.tm_min) + seconds / 60.0f;
+    const float hours = static_cast<float>(localTime.tm_hour % 12) + minutes / 60.0f;
+    const float fullCircle = 6.28318530718f;
+
+    program->use();
+    program->setUniform("secondAngle", fullCircle * seconds / 60.0f);
+    program->setUniform("minuteAngle", fullCircle * minutes / 60.0f);
+    program->setUniform("hourAngle", fullCircle * hours / 12.0f);
+}
+
 Scene::Scene(int sceneNumberValue)
     : sceneNumber(sceneNumberValue),
     shaderProgram(nullptr),
@@ -113,6 +135,14 @@ void Scene::createShaders()
 
         sunShaderProgram =
             shaderPrograms.back().get();
+
+        // One shader program controls both forest clocks.
+        shaderPrograms.push_back(
+            std::make_unique<ShaderProgram>(
+                "shaders/clock.vert", "shaders/clock.frag"
+            )
+        );
+        clockShaderProgram = shaderPrograms.back().get();
 
         shaderPrograms.push_back(
             std::make_unique<ShaderProgram>(
@@ -445,8 +475,23 @@ void Scene::createModels()
         ));
         sunModel = models.back().get();
 
+        // Reuse one clock VAO/VBO for both positions in the forest.
+        models.push_back(std::make_unique<Model>(
+            clockModel, sizeof(clockModel), static_cast<int>(vertexCount), 9
+        ));
+        clockModelObject = models.back().get();
+
         // Large ground on the XZ plane
         const float groundY = -0.65f;
+
+        // Each clock is 2 units tall in the original model.
+        // Uniform scaling keeps the clock perfectly round.
+        const float forestClockScale = 0.65f;
+        const glm::vec2 clockPositions[] = {
+            glm::vec2(-1.8f, -2.7f),
+            glm::vec2(2.5f, -7.0f)
+        };
+
         const float ground[] = {
             -7.5f, groundY,   3.5f, 0.1f, 0.4f, 0.1f,
              7.5f, groundY,   3.5f, 0.1f, 0.4f, 0.1f,
@@ -488,7 +533,7 @@ void Scene::createModels()
         std::uniform_real_distribution<float> treeRotation(-0.8f, 0.8f);
         // Random bush properties
         std::uniform_real_distribution<float> bushX(-6.7f, 6.7f);
-        std::uniform_real_distribution<float> bushZ( -14.5f, 1.0f);
+        std::uniform_real_distribution<float> bushZ(-14.5f, 1.0f);
         std::uniform_real_distribution<float> bushHeight(0.25f, 0.45f);
         std::uniform_real_distribution<float> bushRotation(-0.8f, 0.8f);
         std::vector<glm::vec2> treePositions;
@@ -511,6 +556,19 @@ void Scene::createModels()
                         break;
                     }
                 }
+                // Reserve open space around the clocks.
+                if (validPosition)
+                {
+                    for (const glm::vec2& clockPosition : clockPositions)
+                    {
+                        if (glm::distance(position, clockPosition) < 1.4f)
+                        {
+                            validPosition = false;
+                            break;
+                        }
+                    }
+                }
+
                 if (validPosition) break;
             }
             if (!validPosition) continue;
@@ -532,8 +590,7 @@ void Scene::createModels()
             }
         }
 
-        // Create 13 bushes
-        // Generate 35 bushes
+        // Generate up to 35 bushes
         for (int i = 0; i < 35; i++)
         {
             glm::vec2 position;
@@ -542,14 +599,10 @@ void Scene::createModels()
             // Find a free position for the bush
             for (int attempt = 0; attempt < 1000; attempt++)
             {
-                position = glm::vec2(
-                    bushX(generator),
-                    bushZ(generator)
-                );
-
+                position = glm::vec2(bushX(generator), bushZ(generator));
                 validPosition = true;
 
-                // Check distance from other bushes
+                // Keep bushes away from other bushes
                 for (const glm::vec2& other : bushPositions)
                 {
                     if (glm::distance(position, other) < 0.65f)
@@ -559,12 +612,25 @@ void Scene::createModels()
                     }
                 }
 
-                // Check distance from trees
+                // Keep bushes away from tree trunks
                 if (validPosition)
                 {
                     for (const glm::vec2& treePosition : treePositions)
                     {
                         if (glm::distance(position, treePosition) < 0.70f)
+                        {
+                            validPosition = false;
+                            break;
+                        }
+                    }
+                }
+
+                // Keep bushes away from both clocks
+                if (validPosition)
+                {
+                    for (const glm::vec2& clockPosition : clockPositions)
+                    {
+                        if (glm::distance(position, clockPosition) < 1.0f)
                         {
                             validPosition = false;
                             break;
@@ -585,26 +651,16 @@ void Scene::createModels()
 
             bushPositions.push_back(position);
 
-
-            float height = bushHeight(generator);
-
-            float scale = height / bushModelHeight;
-
-            float rotation = bushRotation(generator);
-
-            float y = groundY - bushMinY * scale;
+            const float height = bushHeight(generator);
+            const float scale = height / bushModelHeight;
+            const float rotation = bushRotation(generator);
+            const float y = groundY - bushMinY * scale;
 
             objects.push_back(
                 std::make_unique<DrawableObject>(
                     bushModel,
                     bushShaderProgram,
-                    Transformation(
-                        position.x,
-                        y,
-                        position.y,
-                        scale,
-                        rotation
-                    )
+                    Transformation(position.x, y, position.y, scale, rotation)
                 )
             );
         }
@@ -615,6 +671,24 @@ void Scene::createModels()
             Transformation(0.78f, 0.72f, 0.0f, 0.16f, 0.0f)
         ));
         objects.back()->setDynamicVerticalMotion(0.07f, 1.3f);
+
+        // Place two clocks on the ground, facing the forest camera.
+        // Transformation is T * R * S with uniform scale on every axis.
+        const float faceTowardCamera = glm::radians(180.0f);
+        for (const glm::vec2& clockPosition : clockPositions)
+        {
+            objects.push_back(std::make_unique<DrawableObject>(
+                clockModelObject,
+                clockShaderProgram,
+                Transformation(
+                    clockPosition.x,
+                    groundY + forestClockScale,
+                    clockPosition.y,
+                    forestClockScale,
+                    faceTowardCamera
+                )
+            ));
+        }
 
         // The login is deliberately the last object in the forest
         models.push_back(std::make_unique<Model>(
@@ -782,22 +856,7 @@ void Scene::draw(const Camera& camera, const Camera& overlayCamera)
             "projectionMatrix", camera.getProjectionMatrix()
         );
 
-        const std::time_t now = std::time(nullptr);
-        std::tm localTime{};
-#ifdef _WIN32
-        localtime_s(&localTime, &now);
-#else
-        localtime_r(&now, &localTime);
-#endif
-
-        const float seconds = static_cast<float>(localTime.tm_sec);
-        const float minutes = static_cast<float>(localTime.tm_min) + seconds / 60.0f;
-        const float hours = static_cast<float>(localTime.tm_hour % 12) + minutes / 60.0f;
-        const float fullCircle = 6.28318530718f;
-
-        clockShaderProgram->setUniform("secondAngle", fullCircle * seconds / 60.0f);
-        clockShaderProgram->setUniform("minuteAngle", fullCircle * minutes / 60.0f);
-        clockShaderProgram->setUniform("hourAngle", fullCircle * hours / 12.0f);
+        setClockAngles(clockShaderProgram);
 
         // Exactly one glDrawArrays call for all clock geometry.
         clockModelObject->draw();
@@ -814,6 +873,9 @@ void Scene::draw(const Camera& camera, const Camera& overlayCamera)
 
     if (sceneNumber == 3 && !objects.empty())
     {
+        // Set clock hand angles once before drawing the two instances.
+        setClockAngles(clockShaderProgram);
+
         // Draw the forest with the movable camera.
         for (size_t i = 0; i + 1 < objects.size(); ++i)
         {
