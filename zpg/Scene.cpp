@@ -460,13 +460,13 @@ else if (sceneNumber == 3)
     // Create ground using two triangles
     const float ground[] =
     {
-        -3.5f, groundY,  0.5f,  0.1f, 0.4f, 0.1f,
-         3.5f, groundY,  0.5f,  0.1f, 0.4f, 0.1f,
-         3.5f, groundY, -9.0f,  0.1f, 0.4f, 0.1f,
+        -7.5f, groundY,   3.5f,  0.1f, 0.4f, 0.1f,
+         7.5f, groundY,   3.5f,  0.1f, 0.4f, 0.1f,
+         7.5f, groundY, -16.0f,  0.1f, 0.4f, 0.1f,
 
-        -3.5f, groundY,  0.5f,  0.1f, 0.4f, 0.1f,
-         3.5f, groundY, -9.0f,  0.1f, 0.4f, 0.1f,
-        -3.5f, groundY, -9.0f,  0.1f, 0.4f, 0.1f
+        -7.5f, groundY,   3.5f,  0.1f, 0.4f, 0.1f,
+         7.5f, groundY, -16.0f,  0.1f, 0.4f, 0.1f,
+        -7.5f, groundY, -16.0f,  0.1f, 0.4f, 0.1f
     };
 
     // Create ground model
@@ -544,13 +544,12 @@ else if (sceneNumber == 3)
 
     // Random tree properties
     std::uniform_real_distribution<float> treeX(
-        -2.8f, 2.8f
+        -7.0f, 7.0f
     );
 
     std::uniform_real_distribution<float> treeZ(
-        -6.5f, -0.5f
+        -15.0f, -0.5f
     );
-
     std::uniform_real_distribution<float> treeHeight(
         1.0f, 1.6f
     );
@@ -582,7 +581,7 @@ else if (sceneNumber == 3)
 
 
     // Generate random trees
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < 74; i++)
     {
         glm::vec2 position;
         bool validPosition = false;
