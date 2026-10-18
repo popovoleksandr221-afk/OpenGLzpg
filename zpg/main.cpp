@@ -10,6 +10,5 @@ int main(void)
     app->run();
 
     delete app;
-
     return 0;
 }

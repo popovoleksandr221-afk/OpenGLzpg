@@ -156,6 +156,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\bush.frag" />
+    <None Include="shaders\clock.frag" />
+    <None Include="shaders\clock.vert" />
     <None Include="shaders\login.frag" />
     <None Include="shaders\planet.frag" />
     <None Include="shaders\sphere.frag" />
@@ -169,6 +171,7 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="clock.h" />
     <ClInclude Include="CompositeTransformation.h" />
     <ClInclude Include="DrawableObject.h" />
     <ClInclude Include="login.h" />

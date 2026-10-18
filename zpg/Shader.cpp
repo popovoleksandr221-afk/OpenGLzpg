@@ -75,10 +75,11 @@ Shader::Shader(
         );
 
         std::cerr
-            << "Shader compilation failed:\n"
+            << "Shader compilation failed in "
+            << shaderFile
+            << ":\n"
             << infoLog
             << std::endl;
-
         glDeleteShader(id);
         id = 0;
 

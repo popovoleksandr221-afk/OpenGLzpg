@@ -60,6 +60,12 @@
     <None Include="shaders\bush.frag" />
     <None Include="shaders\sun.frag" />
     <None Include="shaders\planet.frag" />
+    <None Include="shaders\clock.vert">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="shaders\clock.frag">
+      <Filter>Файлы заголовков</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Models\bushes.h">
@@ -126,6 +132,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="clock.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
