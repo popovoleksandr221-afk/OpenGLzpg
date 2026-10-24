@@ -18,6 +18,7 @@ Application::Application()
     scenes.push_back(std::make_unique<Scene>(3));
     scenes.push_back(std::make_unique<Scene>(4));
     scenes.push_back(std::make_unique<Scene>(5));
+    scenes.push_back(std::make_unique<Scene>(6));
 }
 
 Application::~Application()
@@ -62,6 +63,7 @@ void Application::key_callback(
         if (key == GLFW_KEY_3) application->switchScene(2);
         if (key == GLFW_KEY_4) application->switchScene(3);
         if (key == GLFW_KEY_5) application->switchScene(4);
+        if (key == GLFW_KEY_6) application->switchScene(5);
     }
 
     std::printf("key_callback [%d,%d,%d,%d]\n",
@@ -158,8 +160,8 @@ void Application::createModels()
 
 void Application::switchScene(int sceneIndex)
 {
-    // Four old scenes (0-3) and the clock scene (4).
-    if (sceneIndex < 0 || sceneIndex > 4)
+    // Six scenes (indices 0-5).
+    if (sceneIndex < 0 || sceneIndex > 5)
     {
         return;
     }

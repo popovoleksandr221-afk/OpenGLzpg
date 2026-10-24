@@ -24,6 +24,7 @@ private:
     ShaderProgram* bushShaderProgram;
     ShaderProgram* sunShaderProgram;
     ShaderProgram* clockShaderProgram;
+    ShaderProgram* lightingPrograms[4] = {};
 
     Model* model;
     Model* loginModel;

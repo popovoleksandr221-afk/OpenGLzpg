@@ -182,6 +182,31 @@ void Scene::createShaders()
         );
         loginShaderProgram = shaderPrograms.back().get();
     }
+    else if (sceneNumber == 6)
+    {
+        // One shader program per lighting model.
+        const char* fragmentShaders[4] = {
+            "shaders/ambient.frag",
+            "shaders/lambert.frag",
+            "shaders/phong.frag",
+            "shaders/blinn.frag"
+        };
+
+        for (int i = 0; i < 4; ++i)
+        {
+            shaderPrograms.push_back(std::make_unique<ShaderProgram>(
+                "shaders/sphere_lighting.vert", fragmentShaders[i]
+            ));
+            lightingPrograms[i] = shaderPrograms.back().get();
+        }
+
+        // The login is always visible at the bottom of scene 6.
+        shaderPrograms.push_back(std::make_unique<ShaderProgram>(
+            "shaders/common.vert", "shaders/login.frag"
+        ));
+        loginShaderProgram = shaderPrograms.back().get();
+    }
+
 }
 
 void Scene::createModels()
@@ -742,6 +767,53 @@ void Scene::createModels()
             Transformation(0.0f, -1.08f, 0.0f, 0.06f, 0.0f)
         ));
     }
+    else if (sceneNumber == 6)
+    {
+        // Your sphere.h uses 6 floats per vertex: XYZ + normal XYZ.
+        const int sphereVertexCount =
+            static_cast<int>(sizeof(sphere) / (6 * sizeof(float)));
+
+        // All four objects share one geometry on the GPU.
+        models.push_back(std::make_unique<Model>(
+            sphere, sizeof(sphere), sphereVertexCount
+        ));
+        Model* sphereModel = models.back().get();
+
+        // Upper left: Ambient; upper right: Lambert.
+        // Lower left: Phong; lower right: Blinn-Phong.
+        // The point light is in the center at world position (0, 0, 0).
+        const glm::vec3 positions[4] = {
+            glm::vec3(-0.90f,  0.68f, -0.50f),
+            glm::vec3(0.90f,  0.68f, -0.50f),
+            glm::vec3(-0.90f, -0.68f, -0.50f),
+            glm::vec3(0.90f, -0.68f, -0.50f)
+        };
+
+        for (int i = 0; i < 4; ++i)
+        {
+            objects.push_back(std::make_unique<DrawableObject>(
+                sphereModel,
+                lightingPrograms[i],
+                Transformation(
+                    positions[i].x,
+                    positions[i].y,
+                    positions[i].z,
+                    0.47f, 0.0f
+                )
+            ));
+        }
+
+        // Keep the login separate from the lighting test.
+        models.push_back(std::make_unique<Model>(
+            login, sizeof(login), loginVertexCount
+        ));
+        loginModel = models.back().get();
+        objects.push_back(std::make_unique<DrawableObject>(
+            loginModel, loginShaderProgram,
+            Transformation(0.0f, -1.18f, 0.0f, 0.06f, 0.0f)
+        ));
+    }
+
 }
 
 void Scene::update(GLFWwindow* window)
@@ -760,7 +832,7 @@ void Scene::update(GLFWwindow* window)
 
     // WASD moves the camera in the forest, not the ground.
     // The clock is animated in the vertex shader, not by object movement.
-    if (sceneNumber == 3 || sceneNumber == 5)
+    if (sceneNumber == 3 || sceneNumber == 5 || sceneNumber == 6)
     {
         return;
     }
@@ -896,6 +968,21 @@ void Scene::draw()
         }
 
         // Keep the login in place while moving the forest camera.
+        glDisable(GL_DEPTH_TEST);
+        objects.back()->draw();
+        glEnable(GL_DEPTH_TEST);
+        return;
+    }
+
+    if (sceneNumber == 6 && !objects.empty())
+    {
+        // Draw four spheres with depth testing.
+        for (size_t i = 0; i + 1 < objects.size(); ++i)
+        {
+            objects[i]->draw();
+        }
+
+        // Draw the login on top of the spheres.
         glDisable(GL_DEPTH_TEST);
         objects.back()->draw();
         glEnable(GL_DEPTH_TEST);
