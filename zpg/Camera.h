@@ -38,6 +38,9 @@ public:
     void removeObserver(ICameraObserver& observer);
 
     void resize(int width, int height);
+    void setPose(const glm::vec3& newEye,
+        const glm::vec3& newCenter,
+        const glm::vec3& newUp);
 
     void move(float forwardInput, float rightInput, float deltaTime);
     void lookAround(double deltaX, double deltaY);

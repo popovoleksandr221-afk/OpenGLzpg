@@ -14,6 +14,9 @@ class Scene
 {
 private:
     int sceneNumber;
+    Camera solarCamera;
+    int solarWidth = 0;
+    int solarHeight = 0;
     std::vector<std::unique_ptr<Model>> models;
     std::vector<std::unique_ptr<ShaderProgram>> shaderPrograms;
     std::vector<std::unique_ptr<DrawableObject>> objects;
@@ -24,6 +27,7 @@ private:
     ShaderProgram* bushShaderProgram;
     ShaderProgram* sunShaderProgram;
     ShaderProgram* clockShaderProgram;
+    ShaderProgram* rocketShaderProgram;
     ShaderProgram* lightingPrograms[4] = {};
 
     Model* model;

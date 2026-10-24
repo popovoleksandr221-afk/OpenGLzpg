@@ -16,6 +16,7 @@
 #include "Models/sunVertices.h"
 #include "Models/earthVertices.h"
 #include "Models/moonVertices.h"
+#include "Models/rocket.h"
 
 // Update the three hands without separating the clock geometry.
 static void setClockAngles(ShaderProgram* program)
@@ -83,24 +84,20 @@ void Scene::createShaders()
 
     else if (sceneNumber == 2)
     {
-        // Shader program for Sun, Earth and Moon
-        shaderPrograms.push_back(
-            std::make_unique<ShaderProgram>(
-                "shaders/common.vert",
-                "shaders/planet.frag"
-            )
-        );
-
+        shaderPrograms.push_back(std::make_unique<ShaderProgram>(
+            "shaders/planet_lighting.vert", "shaders/solar_phong.frag"));
         shaderProgram = shaderPrograms.back().get();
 
-        // Shader program for login
-        shaderPrograms.push_back(
-            std::make_unique<ShaderProgram>(
-                "shaders/common.vert",
-                "shaders/login.frag"
-            )
-        );
+        shaderPrograms.push_back(std::make_unique<ShaderProgram>(
+            "shaders/planet_lighting.vert", "shaders/ambient.frag"));
+        sunShaderProgram = shaderPrograms.back().get();
 
+        shaderPrograms.push_back(std::make_unique<ShaderProgram>(
+            "shaders/rocket_lighting.vert", "shaders/solar_phong.frag"));
+        lightingPrograms[0] = shaderPrograms.back().get();
+
+        shaderPrograms.push_back(std::make_unique<ShaderProgram>(
+            "shaders/common.vert", "shaders/login.frag"));
         loginShaderProgram = shaderPrograms.back().get();
     }
 
@@ -323,163 +320,69 @@ void Scene::createModels()
 
     else if (sceneNumber == 2)
     {
-        // Create Sun model
-        models.push_back(
-            std::make_unique<Model>(
-                sunVertices,
-                sizeof(sunVertices),
-                sunVerticesVertexCount
-            )
-        );
-
+        models.push_back(std::make_unique<Model>(
+            sunVertices, sizeof(sunVertices), sunVerticesVertexCount));
         Model* sun = models.back().get();
-
-        // Create Earth model
-        models.push_back(
-            std::make_unique<Model>(
-                earthVertices,
-                sizeof(earthVertices),
-                earthVerticesVertexCount
-            )
-        );
-
+        models.push_back(std::make_unique<Model>(
+            earthVertices, sizeof(earthVertices), earthVerticesVertexCount));
         Model* earth = models.back().get();
-
-        // Create Moon model
-        models.push_back(
-            std::make_unique<Model>(
-                moonVertices,
-                sizeof(moonVertices),
-                moonVerticesVertexCount
-            )
-        );
-
+        models.push_back(std::make_unique<Model>(
+            moonVertices, sizeof(moonVertices), moonVerticesVertexCount));
         Model* moon = models.back().get();
 
-        // Create Sun
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                sun,
-                shaderProgram,
-                Transformation(
-                    0.0f, 0.0f, 0.0f,
-                    0.22f, 0.0f
-                )
-            )
-        );
+        const glm::vec3 up(0.0f, 1.0f, 0.0f);
+        // Blender planet meshes have their poles along local Z. Align Z to Y
+        // before spinning them, so the poles do not point toward the Sun.
+        auto upright = std::make_shared<TimeRotation>(
+            glm::vec3(1.0f, 0.0f, 0.0f), 0.0f, glm::radians(-90.0f));
 
-        // Sun rotates around its own axis
-        objects.back()->addTransformation(
-            std::make_shared<TimeRotation>(
-                glm::vec3(0.0f, 1.0f, 0.0f),
-                0.3f
-            )
-        );
+        objects.push_back(std::make_unique<DrawableObject>(
+            sun, sunShaderProgram, Transformation(0, 0, 0, 0.28f, 0)));
+        objects.back()->addTransformation(std::make_shared<TimeRotation>(up, 0.3f));
+        objects.back()->addTransformation(upright);
 
-        // Create Earth's orbit around the Sun
-        auto earthOrbit =
-            std::make_shared<CompositeTransformation>();
+        // R * T * inverse(R) moves the center along the XZ orbit without
+        // rotating its coordinate frame. Neither size nor spin is inherited.
+        auto earthOrbit = std::make_shared<CompositeTransformation>();
+        earthOrbit->add(std::make_shared<TimeRotation>(up, 0.32f));
+        earthOrbit->add(std::make_shared<Transformation>(1.15f, 0.0f, 0.0f, 1.0f, 0.0f));
+        earthOrbit->add(std::make_shared<TimeRotation>(up, -0.32f));
 
-        // Orbital rotation in the XY plane
-        earthOrbit->add(
-            std::make_shared<TimeRotation>(
-                glm::vec3(0.0f, 0.0f, 1.0f),
-                0.45f
-            )
-        );
-
-        // Distance from Sun to Earth
-        earthOrbit->add(
-            std::make_shared<Transformation>(
-                0.68f, 0.0f, 0.0f,
-                1.0f, 0.0f
-            )
-        );
-
-        // Create Earth
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                earth,
-                shaderProgram,
-                Transformation(
-                    0.0f, 0.0f, 0.0f,
-                    1.0f, 0.0f
-                )
-            )
-        );
-
-        // Apply Earth's orbit
+        objects.push_back(std::make_unique<DrawableObject>(
+            earth, shaderProgram, Transformation()));
         objects.back()->addTransformation(earthOrbit);
+        objects.back()->addTransformation(std::make_shared<TimeRotation>(up, 1.0f));
+        objects.back()->addTransformation(upright);
+        objects.back()->addTransformation(Transformation(0, 0, 0, 0.16f, 0));
 
-        // Earth size
-        objects.back()->addTransformation(
-            Transformation(
-                0.0f, 0.0f, 0.0f,
-                0.11f, 0.0f
-            )
-        );
-
-        // Create Moon
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                moon,
-                shaderProgram,
-                Transformation(
-                    0.0f, 0.0f, 0.0f,
-                    1.0f, 0.0f
-                )
-            )
-        );
-
-        // Moon follows Earth around the Sun
+        objects.push_back(std::make_unique<DrawableObject>(
+            moon, shaderProgram, Transformation()));
         objects.back()->addTransformation(earthOrbit);
+        objects.back()->addTransformation(std::make_shared<TimeRotation>(up, 0.8f));
+        objects.back()->addTransformation(Transformation(0.38f, 0, 0, 1, 0));
+        objects.back()->addTransformation(std::make_shared<TimeRotation>(up, -0.8f));
+        objects.back()->addTransformation(std::make_shared<TimeRotation>(up, 0.25f));
+        objects.back()->addTransformation(upright);
+        objects.back()->addTransformation(Transformation(0, 0, 0, 0.065f, 0));
 
-        // Moon revolves around Earth
+        // Rocket follows its own outer orbit, nose pointing along its flight path.
+        // Center the mesh before scaling and orienting it (model Y: -0.045..3.575).
+        models.push_back(std::make_unique<Model>(
+            rocketVertices, sizeof(rocketVertices), rocketVertexCount));
+        objects.push_back(std::make_unique<DrawableObject>(
+            models.back().get(), lightingPrograms[0], Transformation()));
         objects.back()->addTransformation(
-            std::make_shared<TimeRotation>(
-                glm::vec3(0.0f, 0.0f, 1.0f),
-                0.8f
-            )
-        );
+            std::make_shared<TimeRotation>(up, 0.30f, glm::radians(30.0f)));
+        objects.back()->addTransformation(Transformation(1.95f, 0, 0, 1, 0));
+        objects.back()->addTransformation(std::make_shared<TimeRotation>(
+            glm::vec3(1.0f, 0.0f, 0.0f), 0.0f, glm::radians(-90.0f)));
+        objects.back()->addTransformation(Transformation(0, 0, 0, 0.18f, 0));
+        objects.back()->addTransformation(Transformation(0, -1.765f, 0, 1, 0));
 
-        // Distance from Earth to Moon
-        objects.back()->addTransformation(
-            Transformation(
-                0.25f, 0.0f, 0.0f,
-                1.0f, 0.0f
-            )
-        );
-
-        // Moon size
-        objects.back()->addTransformation(
-            Transformation(
-                0.0f, 0.0f, 0.0f,
-                0.045f, 0.0f
-            )
-        );
-
-        // Create login model
-        models.push_back(
-            std::make_unique<Model>(
-                login,
-                sizeof(login),
-                loginVertexCount
-            )
-        );
-
+        models.push_back(std::make_unique<Model>(login, sizeof(login), loginVertexCount));
         loginModel = models.back().get();
-
-        // Create login drawable object
-        objects.push_back(
-            std::make_unique<DrawableObject>(
-                loginModel,
-                loginShaderProgram,
-                Transformation(
-                    0.0f, -0.85f, 0.0f,
-                    0.10f, 0.0f
-                )
-            )
-        );
+        objects.push_back(std::make_unique<DrawableObject>(
+            loginModel, loginShaderProgram, Transformation(0, -1.08f, 0, 0.06f, 0)));
     }
 
     else if (sceneNumber == 3)
@@ -832,7 +735,7 @@ void Scene::update(GLFWwindow* window)
 
     // WASD moves the camera in the forest, not the ground.
     // The clock is animated in the vertex shader, not by object movement.
-    if (sceneNumber == 3 || sceneNumber == 5 || sceneNumber == 6)
+    if (sceneNumber == 2 || sceneNumber == 3 || sceneNumber == 5 || sceneNumber == 6)
     {
         return;
     }
@@ -926,6 +829,26 @@ void Scene::observeCameras(Camera& camera, Camera& forestCamera)
 
 void Scene::draw()
 {
+    if (sceneNumber == 2 && !objects.empty())
+    {
+        // Oblique view makes horizontal orbits visible without changing other scenes.
+        const glm::mat4 solarView = glm::lookAt(
+            glm::vec3(0.0f, 2.8f, 4.5f), glm::vec3(0.0f, 0.0f, 0.0f),
+            glm::vec3(0.0f, 1.0f, 0.0f));
+        for (const auto& program : shaderPrograms)
+        {
+            if (program.get() == loginShaderProgram) continue;
+            program->use();
+            program->setUniform("viewMatrix", solarView);
+        }
+        for (size_t i = 0; i + 1 < objects.size(); ++i)
+            objects[i]->draw();
+        glDisable(GL_DEPTH_TEST);
+        objects.back()->draw();
+        glEnable(GL_DEPTH_TEST);
+        return;
+    }
+
     if (sceneNumber == 5)
     {
         clockShaderProgram->use();

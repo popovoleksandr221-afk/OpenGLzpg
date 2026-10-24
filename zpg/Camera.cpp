@@ -76,6 +76,16 @@ void Camera::resize(int width, int height)
     notifyObservers();
 }
 
+void Camera::setPose(const glm::vec3& newEye,
+    const glm::vec3& newCenter,
+    const glm::vec3& newUp)
+{
+    eye = newEye;
+    center = newCenter;
+    up = newUp;
+    notifyObservers();
+}
+
 void Camera::move(float forwardInput, float rightInput, float deltaTime)
 {
     // Keep walking on the horizontal XZ plane.
