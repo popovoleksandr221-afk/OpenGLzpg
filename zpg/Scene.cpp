@@ -3,6 +3,7 @@
 #include "Models/clock.h"
 
 #include <ctime>
+#include <cmath>
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -682,14 +683,13 @@ void Scene::createModels()
         ));
         Model* sphereModel = models.back().get();
 
-        // Upper left: Ambient; upper right: Lambert.
-        // Lower left: Phong; lower right: Blinn-Phong.
+        // Top: Ambient; left: Lambert; right: Phong; bottom: Blinn-Phong.
         // The point light is in the center at world position (0, 0, 0).
         const glm::vec3 positions[4] = {
-            glm::vec3(-0.90f,  0.68f, -0.50f),
-            glm::vec3(0.90f,  0.68f, -0.50f),
-            glm::vec3(-0.90f, -0.68f, -0.50f),
-            glm::vec3(0.90f, -0.68f, -0.50f)
+            glm::vec3(0.0f, 2.0f, 0.0f),
+            glm::vec3(-2.0f, 0.0f, 0.0f),
+            glm::vec3(2.0f, 0.0f, 0.0f),
+            glm::vec3(0.0f, -2.0f, 0.0f)
         };
 
         for (int i = 0; i < 4; ++i)
@@ -701,7 +701,7 @@ void Scene::createModels()
                     positions[i].x,
                     positions[i].y,
                     positions[i].z,
-                    0.47f, 0.0f
+                    0.65f, 0.0f
                 )
             ));
         }
@@ -713,7 +713,7 @@ void Scene::createModels()
         loginModel = models.back().get();
         objects.push_back(std::make_unique<DrawableObject>(
             loginModel, loginShaderProgram,
-            Transformation(0.0f, -1.18f, 0.0f, 0.06f, 0.0f)
+            Transformation(0.0f, -3.0f, 0.0f, 0.12f, 0.0f)
         ));
     }
 
@@ -731,6 +731,39 @@ void Scene::update(GLFWwindow* window)
     for (auto& object : objects)
     {
         object->update(time);
+    }
+
+    if (sceneNumber == 6)
+    {
+        const double now = glfwGetTime();
+        const float dt = lightingLastTime > 0.0
+            ? static_cast<float>(std::min(now - lightingLastTime, 0.1)) : 0.0f;
+        lightingLastTime = now;
+        if (glfwGetWindowAttrib(window, GLFW_FOCUSED) == GLFW_TRUE)
+        {
+            if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) lightingAngle -= dt * 0.7f;
+            if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) lightingAngle += dt * 0.7f;
+            if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) lightingAngle = 0.0f;
+        }
+
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+        if (width <= 0 || height <= 0) return; // Minimized window.
+        // Application updates glViewport using these same framebuffer dimensions.
+        const float aspect = static_cast<float>(width) / static_cast<float>(height);
+        const float halfFov = glm::radians(45.0f) * 0.5f;
+        const float limitingHalfFov = std::atan(std::tan(halfFov) * std::min(aspect, 1.0f));
+        // Fit a bounding sphere, including the login, into the smaller field of view.
+        const float distance = 3.4f / std::sin(limitingHalfFov);
+        lightingCamera.resize(width, height);
+        lightingCamera.setPose(
+            glm::vec3(std::sin(lightingAngle) * distance, 0.0f,
+                std::cos(lightingAngle) * distance),
+            glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        lightingOverlayCamera.resize(width, height);
+        lightingOverlayCamera.setPose(glm::vec3(0.0f, 0.0f, distance),
+            glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        return;
     }
 
     // WASD moves the camera in the forest, not the ground.
@@ -817,6 +850,12 @@ void Scene::observeCameras(Camera& camera, Camera& forestCamera)
 {
     for (const auto& program : shaderPrograms)
     {
+        if (sceneNumber == 6)
+        {
+            program->observeCamera(program.get() == loginShaderProgram
+                ? lightingOverlayCamera : lightingCamera);
+            continue;
+        }
         // Forest login remains fixed; other forest objects use WASD camera.
         Camera& selectedCamera =
             (sceneNumber == 3 && program.get() != loginShaderProgram)

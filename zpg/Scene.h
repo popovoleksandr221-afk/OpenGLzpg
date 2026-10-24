@@ -14,6 +14,11 @@ class Scene
 {
 private:
     int sceneNumber;
+    // Cameras must outlive shaderPrograms (observer subscriptions).
+    Camera lightingCamera;
+    Camera lightingOverlayCamera;
+    float lightingAngle = 0.0f;
+    double lightingLastTime = 0.0;
     Camera solarCamera;
     int solarWidth = 0;
     int solarHeight = 0;
