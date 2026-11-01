@@ -743,7 +743,19 @@ void Scene::update(GLFWwindow* window)
         {
             if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) lightingAngle -= dt * 0.7f;
             if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) lightingAngle += dt * 0.7f;
-            if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) lightingAngle = 0.0f;
+            const float horizontal = static_cast<float>(
+                glfwGetKey(window, GLFW_KEY_RIGHT) - glfwGetKey(window, GLFW_KEY_LEFT));
+            const float vertical = static_cast<float>(
+                glfwGetKey(window, GLFW_KEY_UP) - glfwGetKey(window, GLFW_KEY_DOWN));
+            const glm::vec3 right(std::cos(lightingAngle), 0.0f, -std::sin(lightingAngle));
+            sphereGroupOffset += (horizontal * right + glm::vec3(0.0f, vertical, 0.0f)) * dt * 1.5f;
+            sphereGroupRoll += (glfwGetKey(window, GLFW_KEY_Q) - glfwGetKey(window, GLFW_KEY_E)) * dt;
+            if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+            {
+                lightingAngle = 0.0f;
+                sphereGroupOffset = glm::vec3(0.0f);
+                sphereGroupRoll = 0.0f;
+            }
         }
 
         int width, height;
@@ -938,10 +950,13 @@ void Scene::draw()
 
     if (sceneNumber == 6 && !objects.empty())
     {
-        // Draw four spheres with depth testing.
+        // Rotate the four spheres around their shared center before translating them.
+        const glm::mat4 groupMatrix = glm::rotate(
+            glm::translate(glm::mat4(1.0f), sphereGroupOffset),
+            sphereGroupRoll, glm::vec3(0.0f, 0.0f, 1.0f));
         for (size_t i = 0; i + 1 < objects.size(); ++i)
         {
-            objects[i]->draw();
+            objects[i]->draw(groupMatrix);
         }
 
         // Draw the login on top of the spheres.

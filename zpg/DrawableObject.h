@@ -27,7 +27,7 @@ public:
         const Transformation& transformation
     );
 
-    void draw();
+    void draw(const glm::mat4& parentMatrix = glm::mat4(1.0f));
     void update(float time);
 
     void setTransformation(const Transformation& value);

@@ -14,7 +14,7 @@ DrawableObject::DrawableObject(
     composite.add(transformation);
 }
 
-void DrawableObject::draw()
+void DrawableObject::draw(const glm::mat4& parentMatrix)
 {
     // use() applies cached camera matrices, if they have changed.
     shaderProgram->use();
@@ -26,7 +26,7 @@ void DrawableObject::draw()
         dynamicMatrix, glm::vec3(0.0f, dynamicOffsetY, 0.0f)
     );
 
-    modelMatrix = dynamicMatrix * modelMatrix;
+    modelMatrix = parentMatrix * dynamicMatrix * modelMatrix;
 
     // Only the object model matrix is set here.
     // View and projection come from the Camera observer.

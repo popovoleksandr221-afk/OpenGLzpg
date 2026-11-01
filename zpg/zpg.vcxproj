@@ -163,6 +163,7 @@
     <None Include="shaders\planet.frag" />
     <None Include="shaders\sphere.frag" />
     <None Include="shaders\common.vert" />
+    <None Include="shaders\sphere_lighting.vert" />
     <None Include="shaders\square.frag" />
     <None Include="shaders\sun.frag" />
     <None Include="shaders\tree.frag" />

@@ -66,6 +66,8 @@
     <None Include="shaders\clock.frag">
       <Filter>Файлы заголовков</Filter>
     </None>
+    <None Include="shaders\lighting.vert" />
+    <None Include="shaders\sphere_lighting.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Models\bushes.h">

@@ -18,6 +18,8 @@ private:
     Camera lightingCamera;
     Camera lightingOverlayCamera;
     float lightingAngle = 0.0f;
+    glm::vec3 sphereGroupOffset{0.0f};
+    float sphereGroupRoll = 0.0f;
     double lightingLastTime = 0.0;
     Camera solarCamera;
     int solarWidth = 0;
