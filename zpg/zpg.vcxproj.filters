@@ -68,6 +68,7 @@
     </None>
     <None Include="shaders\lighting.vert" />
     <None Include="shaders\sphere_lighting.vert" />
+    <None Include="shaders\phong.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Models\bushes.h">

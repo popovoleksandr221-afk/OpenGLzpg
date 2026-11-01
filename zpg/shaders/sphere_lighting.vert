@@ -7,6 +7,7 @@ layout(location = 1) in vec3 normal;
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
+uniform vec3 worldLightPosition = vec3(0.0);
 
 out vec3 fragPosition;
 out vec3 fragNormal;
@@ -28,8 +29,8 @@ void main()
     fragPosition = viewPosition.xyz;
     fragNormal = mat3(viewMatrix) * worldNormal;
 
-    // One light at the origin (0, 0, 0) for all four spheres.
-    vec3 lightPosition = (viewMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+    // Transform the world-space light into camera space.
+    vec3 lightPosition = (viewMatrix * vec4(worldLightPosition, 1.0)).xyz;
     lightDirection = lightPosition - fragPosition;
 
     // Same blue material on all four spheres.

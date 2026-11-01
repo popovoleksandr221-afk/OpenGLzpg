@@ -19,6 +19,7 @@ Application::Application()
     scenes.push_back(std::make_unique<Scene>(4));
     scenes.push_back(std::make_unique<Scene>(5));
     scenes.push_back(std::make_unique<Scene>(6));
+    scenes.push_back(std::make_unique<Scene>(7));
 }
 
 Application::~Application()
@@ -64,6 +65,7 @@ void Application::key_callback(
         if (key == GLFW_KEY_4) application->switchScene(3);
         if (key == GLFW_KEY_5) application->switchScene(4);
         if (key == GLFW_KEY_6) application->switchScene(5);
+        if (key == GLFW_KEY_7) application->switchScene(6);
     }
 
     std::printf("key_callback [%d,%d,%d,%d]\n",
@@ -160,8 +162,7 @@ void Application::createModels()
 
 void Application::switchScene(int sceneIndex)
 {
-    // Six scenes (indices 0-5).
-    if (sceneIndex < 0 || sceneIndex > 5)
+    if (sceneIndex < 0 || sceneIndex >= static_cast<int>(scenes.size()))
     {
         return;
     }
@@ -229,7 +230,11 @@ void Application::run()
             rightMouseHeld = false;
         }
 
-        // Use the same black background in all five scenes.
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+        glViewport(0, 0, width, height);
+
+        // Use the same black background in all scenes.
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

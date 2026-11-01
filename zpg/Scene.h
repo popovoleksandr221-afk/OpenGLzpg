@@ -21,6 +21,8 @@ private:
     glm::vec3 sphereGroupOffset{0.0f};
     float sphereGroupRoll = 0.0f;
     double lightingLastTime = 0.0;
+    float backfacePitch = 0.0f;
+    float backfaceDistance = 5.0f;
     Camera solarCamera;
     int solarWidth = 0;
     int solarHeight = 0;

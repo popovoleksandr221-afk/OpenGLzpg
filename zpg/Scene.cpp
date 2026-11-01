@@ -60,6 +60,19 @@ Scene::Scene(int sceneNumberValue)
 
 void Scene::createShaders()
 {
+    if (sceneNumber == 7)
+    {
+        shaderPrograms.push_back(std::make_unique<ShaderProgram>(
+            "shaders/sphere_lighting.vert", "shaders/phong.frag"));
+        shaderProgram = shaderPrograms.back().get();
+        shaderProgram->use();
+        shaderProgram->setUniform("worldLightPosition", 0.0f, 0.0f, -3.0f);
+        shaderProgram->setUniform("shininess", 1.0f);
+        shaderProgram->setUniform("diffuseStrength", 0.70f);
+        shaderProgram->setUniform("specularStrength", 0.70f);
+        shaderProgram->setUniform("backfaceTest", 1.0f);
+        return;
+    }
     if (sceneNumber == 1)
     {
         shaderPrograms.push_back(
@@ -209,6 +222,14 @@ void Scene::createShaders()
 
 void Scene::createModels()
 {
+    if (sceneNumber == 7)
+    {
+        models.push_back(std::make_unique<Model>(
+            sphere, sizeof(sphere), static_cast<int>(sizeof(sphere) / (6 * sizeof(float)))));
+        objects.push_back(std::make_unique<DrawableObject>(
+            models.back().get(), shaderProgram, Transformation()));
+        return;
+    }
     if (sceneNumber == 1)
     {
         // Create triangle vertices
@@ -726,6 +747,48 @@ void Scene::update(GLFWwindow* window)
         return;
     }
 
+    if (sceneNumber == 7)
+    {
+        const double now = glfwGetTime();
+        const float dt = lightingLastTime > 0.0
+            ? static_cast<float>(std::min(now - lightingLastTime, 0.1)) : 0.0f;
+        lightingLastTime = now;
+        if (glfwGetWindowAttrib(window, GLFW_FOCUSED) == GLFW_TRUE)
+        {
+            lightingAngle += (glfwGetKey(window, GLFW_KEY_D) - glfwGetKey(window, GLFW_KEY_A)) * dt;
+            backfacePitch += (glfwGetKey(window, GLFW_KEY_W) - glfwGetKey(window, GLFW_KEY_S)) * dt;
+            backfaceDistance += (glfwGetKey(window, GLFW_KEY_F) - glfwGetKey(window, GLFW_KEY_R)) * dt * 2.0f;
+            backfacePitch = std::max(-1.4f, std::min(backfacePitch, 1.4f));
+            backfaceDistance = std::max(2.0f, std::min(backfaceDistance, 15.0f));
+            if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+            {
+                lightingAngle = 0.0f;
+                backfacePitch = 0.0f;
+                backfaceDistance = 5.0f;
+            }
+        }
+
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+        if (width <= 0 || height <= 0) return;
+
+        // c) Incorrect: keep the initial viewport and aspect ratio after resizing.
+         //glViewport(0, 0, 800, 600);
+         //lightingCamera.resize(800, 600);
+
+        // d) Correct: use the current framebuffer size for both.
+        glViewport(0, 0, width, height);
+        lightingCamera.resize(width, height);
+
+        const glm::vec3 eye = backfaceDistance * glm::vec3(
+            std::sin(lightingAngle) * std::cos(backfacePitch),
+            std::sin(backfacePitch),
+            std::cos(lightingAngle) * std::cos(backfacePitch));
+        lightingCamera.setPose(eye,
+            glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        return;
+    }
+
     float time = static_cast<float>(glfwGetTime());
 
     for (auto& object : objects)
@@ -862,7 +925,7 @@ void Scene::observeCameras(Camera& camera, Camera& forestCamera)
 {
     for (const auto& program : shaderPrograms)
     {
-        if (sceneNumber == 6)
+        if (sceneNumber == 6 || sceneNumber == 7)
         {
             program->observeCamera(program.get() == loginShaderProgram
                 ? lightingOverlayCamera : lightingCamera);
