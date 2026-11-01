@@ -33,6 +33,8 @@
     <ClCompile Include="Shader.cpp">
       <Filter>Файлы ресурсов</Filter>
     </ClCompile>
+    <ClCompile Include="Light.cpp" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="ShaderProgram.cpp">
       <Filter>Файлы ресурсов</Filter>
     </ClCompile>
@@ -107,6 +109,8 @@
     <ClInclude Include="Shader.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="Light.h" />
+    <ClInclude Include="Material.h" />
     <ClInclude Include="ShaderProgram.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>

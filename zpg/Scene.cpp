@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "Material.h"
 
 #include "Models/clock.h"
 
@@ -65,12 +66,17 @@ void Scene::createShaders()
         shaderPrograms.push_back(std::make_unique<ShaderProgram>(
             "shaders/sphere_lighting.vert", "shaders/phong.frag"));
         shaderProgram = shaderPrograms.back().get();
-        shaderProgram->use();
-        shaderProgram->setUniform("worldLightPosition", 0.0f, 0.0f, -3.0f);
-        shaderProgram->setUniform("shininess", 1.0f);
-        shaderProgram->setUniform("diffuseStrength", 0.70f);
-        shaderProgram->setUniform("specularStrength", 0.70f);
+        sceneLight.position = glm::vec3(0.0f, 0.0f, -3.0f);
+        sceneLight.apply(*shaderProgram);
+        Material sphereMaterial;
+        sphereMaterial.shininess = 1.0f;
+        sphereMaterial.diffuseStrength = 0.70f;
+        sphereMaterial.specularStrength = 0.70f;
+        sphereMaterial.apply(*shaderProgram);
         shaderProgram->setUniform("backfaceTest", 1.0f);
+        shaderPrograms.push_back(std::make_unique<ShaderProgram>(
+            "shaders/common.vert", "shaders/login.frag"));
+        loginShaderProgram = shaderPrograms.back().get();
         return;
     }
     if (sceneNumber == 1)
@@ -137,19 +143,23 @@ void Scene::createShaders()
         bushShaderProgram =
             shaderPrograms.back().get();
 
-        for (ShaderProgram* program : { treeShaderProgram, bushShaderProgram })
-        {
-            program->use();
-            program->setUniform("forestMaterial", program == treeShaderProgram ? 1.0f : 2.0f);
-            program->setUniform("ambientStrength", 0.025f);
-            program->setUniform("diffuseStrength", 2.5f);
-            program->setUniform("specularStrength", 0.08f);
-            program->setUniform("shininess", 16.0f);
-            program->setUniform("lightColor", 1.0f, 0.9f, 0.35f);
-            program->setUniform("linearAttenuation", 0.35f);
-            program->setUniform("quadraticAttenuation", 0.44f);
-            program->setUniform("lightRange", 4.0f);
-        }
+        sceneLight.position = glm::vec3(0.5f, 0.85f, -2.0f);
+        sceneLight.color = glm::vec3(1.0f, 0.9f, 0.35f);
+        sceneLight.linearAttenuation = 0.35f;
+        sceneLight.quadraticAttenuation = 0.44f;
+        sceneLight.range = 4.0f;
+        sceneLight.apply(*treeShaderProgram);
+        sceneLight.apply(*bushShaderProgram);
+
+        Material forestMaterial;
+        forestMaterial.ambientStrength = 0.025f;
+        forestMaterial.diffuseStrength = 2.5f;
+        forestMaterial.specularStrength = 0.08f;
+        forestMaterial.shininess = 16.0f;
+        forestMaterial.surface = Material::Surface::Tree;
+        forestMaterial.apply(*treeShaderProgram);
+        forestMaterial.surface = Material::Surface::BushAndGround;
+        forestMaterial.apply(*bushShaderProgram);
 
         shaderPrograms.push_back(
             std::make_unique<ShaderProgram>(
@@ -244,6 +254,12 @@ void Scene::createModels()
             sphere, sizeof(sphere), static_cast<int>(sizeof(sphere) / (6 * sizeof(float)))));
         objects.push_back(std::make_unique<DrawableObject>(
             models.back().get(), shaderProgram, Transformation()));
+        models.push_back(std::make_unique<Model>(
+            login, sizeof(login), loginVertexCount));
+        loginModel = models.back().get();
+        objects.push_back(std::make_unique<DrawableObject>(
+            loginModel, loginShaderProgram,
+            Transformation(0.0f, -1.08f, 0.0f, 0.06f, 0.0f)));
         return;
     }
     if (sceneNumber == 1)
@@ -634,7 +650,8 @@ void Scene::createModels()
         // A small emissive sphere marks the single point light.
         objects.push_back(std::make_unique<DrawableObject>(
             sunModel, sunShaderProgram,
-            Transformation(0.5f, 0.85f, -2.0f, 0.045f, 0.0f)
+            Transformation(sceneLight.position.x, sceneLight.position.y,
+                sceneLight.position.z, 0.045f, 0.0f)
         ));
         objects.back()->setDynamicVerticalMotion(0.07f, 1.3f);
 
@@ -802,6 +819,9 @@ void Scene::update(GLFWwindow* window)
             std::cos(lightingAngle) * std::cos(backfacePitch));
         lightingCamera.setPose(eye,
             glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        lightingOverlayCamera.resize(width, height);
+        lightingOverlayCamera.setPose(glm::vec3(0.0f, 0.0f, 3.0f),
+            glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         return;
     }
 
@@ -810,11 +830,10 @@ void Scene::update(GLFWwindow* window)
     if (sceneNumber == 3)
     {
         // Match the light position to the firefly's vertical animation.
-        const float lightY = 0.85f + 0.07f * std::sin(time * 1.3f);
+        sceneLight.position.y = 0.85f + 0.07f * std::sin(time * 1.3f);
         for (ShaderProgram* program : { treeShaderProgram, bushShaderProgram })
         {
-            program->use();
-            program->setUniform("worldLightPosition", 0.5f, lightY, -2.0f);
+            sceneLight.apply(*program);
         }
     }
 
@@ -970,6 +989,15 @@ void Scene::observeCameras(Camera& camera, Camera& forestCamera)
 
 void Scene::draw()
 {
+    if (sceneNumber == 7 && !objects.empty())
+    {
+        objects.front()->draw();
+        // Draw the login with its fixed camera, above the sphere.
+        glDisable(GL_DEPTH_TEST);
+        objects.back()->draw();
+        glEnable(GL_DEPTH_TEST);
+        return;
+    }
     if (sceneNumber == 2 && !objects.empty())
     {
         // Oblique view makes horizontal orbits visible without changing other scenes.

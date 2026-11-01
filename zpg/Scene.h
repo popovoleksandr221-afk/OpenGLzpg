@@ -9,11 +9,13 @@
 #include "Model.h"
 #include "ShaderProgram.h"
 #include "Camera.h"
+#include "Light.h"
 
 class Scene
 {
 private:
     int sceneNumber;
+    Light sceneLight;
     // Cameras must outlive shaderPrograms (observer subscriptions).
     Camera lightingCamera;
     Camera lightingOverlayCamera;
