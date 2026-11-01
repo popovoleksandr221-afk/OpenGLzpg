@@ -4,6 +4,7 @@ in vec3 vertexColor;
 in vec3 vertexNormal;
 
 out vec4 FragColor;
+uniform float brightnessScale = 1.0;
 
 void main()
 {
@@ -22,7 +23,7 @@ void main()
         0.25 * abs(normalize(vertexNormal).z);
 
     FragColor = vec4(
-        displayColor * brightness,
+        displayColor * brightness * brightnessScale,
         1.0
     );
 }

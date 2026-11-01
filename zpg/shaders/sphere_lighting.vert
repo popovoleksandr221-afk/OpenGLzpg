@@ -13,6 +13,7 @@ out vec3 fragPosition;
 out vec3 fragNormal;
 out vec3 lightDirection;
 out vec3 vertexColor;
+out vec3 vertexPosition;
 
 void main()
 {
@@ -35,6 +36,7 @@ void main()
 
     // Same blue material on all four spheres.
     vertexColor = vec3(0.40, 0.68, 0.90);
+    vertexPosition = position;
 
     gl_Position = projectionMatrix * viewPosition;
 }

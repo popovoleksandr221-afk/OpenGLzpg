@@ -119,8 +119,8 @@ void Scene::createShaders()
     {
         shaderPrograms.push_back(
             std::make_unique<ShaderProgram>(
-                "shaders/common.vert",
-                "shaders/tree.frag"
+                "shaders/sphere_lighting.vert",
+                "shaders/phong.frag"
             )
         );
 
@@ -129,13 +129,27 @@ void Scene::createShaders()
 
         shaderPrograms.push_back(
             std::make_unique<ShaderProgram>(
-                "shaders/common.vert",
-                "shaders/bush.frag"
+                "shaders/sphere_lighting.vert",
+                "shaders/phong.frag"
             )
         );
 
         bushShaderProgram =
             shaderPrograms.back().get();
+
+        for (ShaderProgram* program : { treeShaderProgram, bushShaderProgram })
+        {
+            program->use();
+            program->setUniform("forestMaterial", program == treeShaderProgram ? 1.0f : 2.0f);
+            program->setUniform("ambientStrength", 0.025f);
+            program->setUniform("diffuseStrength", 2.5f);
+            program->setUniform("specularStrength", 0.08f);
+            program->setUniform("shininess", 16.0f);
+            program->setUniform("lightColor", 1.0f, 0.9f, 0.35f);
+            program->setUniform("linearAttenuation", 0.35f);
+            program->setUniform("quadraticAttenuation", 0.44f);
+            program->setUniform("lightRange", 4.0f);
+        }
 
         shaderPrograms.push_back(
             std::make_unique<ShaderProgram>(
@@ -154,6 +168,8 @@ void Scene::createShaders()
             )
         );
         clockShaderProgram = shaderPrograms.back().get();
+        clockShaderProgram->use();
+        clockShaderProgram->setUniform("brightnessScale", 0.08f);
 
         shaderPrograms.push_back(
             std::make_unique<ShaderProgram>(
@@ -443,12 +459,12 @@ void Scene::createModels()
         };
 
         const float ground[] = {
-            -7.5f, groundY,   3.5f, 0.1f, 0.4f, 0.1f,
-             7.5f, groundY,   3.5f, 0.1f, 0.4f, 0.1f,
-             7.5f, groundY, -16.0f, 0.1f, 0.4f, 0.1f,
-            -7.5f, groundY,   3.5f, 0.1f, 0.4f, 0.1f,
-             7.5f, groundY, -16.0f, 0.1f, 0.4f, 0.1f,
-            -7.5f, groundY, -16.0f, 0.1f, 0.4f, 0.1f
+            -7.5f, groundY,   3.5f, 0.0f, 1.0f, 0.0f,
+             7.5f, groundY,   3.5f, 0.0f, 1.0f, 0.0f,
+             7.5f, groundY, -16.0f, 0.0f, 1.0f, 0.0f,
+            -7.5f, groundY,   3.5f, 0.0f, 1.0f, 0.0f,
+             7.5f, groundY, -16.0f, 0.0f, 1.0f, 0.0f,
+            -7.5f, groundY, -16.0f, 0.0f, 1.0f, 0.0f
         };
 
         models.push_back(std::make_unique<Model>(ground, sizeof(ground), 6));
@@ -615,10 +631,10 @@ void Scene::createModels()
             );
         }
 
-        // Sun
+        // A small emissive sphere marks the single point light.
         objects.push_back(std::make_unique<DrawableObject>(
             sunModel, sunShaderProgram,
-            Transformation(0.78f, 0.72f, 0.0f, 0.16f, 0.0f)
+            Transformation(0.5f, 0.85f, -2.0f, 0.045f, 0.0f)
         ));
         objects.back()->setDynamicVerticalMotion(0.07f, 1.3f);
 
@@ -790,6 +806,17 @@ void Scene::update(GLFWwindow* window)
     }
 
     float time = static_cast<float>(glfwGetTime());
+
+    if (sceneNumber == 3)
+    {
+        // Match the light position to the firefly's vertical animation.
+        const float lightY = 0.85f + 0.07f * std::sin(time * 1.3f);
+        for (ShaderProgram* program : { treeShaderProgram, bushShaderProgram })
+        {
+            program->use();
+            program->setUniform("worldLightPosition", 0.5f, lightY, -2.0f);
+        }
+    }
 
     for (auto& object : objects)
     {
